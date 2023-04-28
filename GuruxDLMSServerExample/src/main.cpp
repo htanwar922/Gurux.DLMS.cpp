@@ -50,6 +50,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <errno.h>
+#include <getopt.h>
 #endif
 #include "../include/GXDLMSServerSN.h"
 #include "../include/GXDLMSServerLN.h"

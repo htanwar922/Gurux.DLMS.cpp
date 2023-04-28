@@ -113,7 +113,7 @@ void CGXDLMSArbitrator::GetValues(std::vector<std::string>& values)
     sb.clear();
     sb << "{";
     empty = true;
-    for (std::vector<std::vector<uint16_t>>::iterator it = m_WeightingsTable.begin(); it != m_WeightingsTable.end(); ++it)
+    for (std::vector<std::vector<uint16_t> >::iterator it = m_WeightingsTable.begin(); it != m_WeightingsTable.end(); ++it)
     {
         if (empty)
         {
@@ -270,7 +270,7 @@ int CGXDLMSArbitrator::GetValue(CGXDLMSSettings& settings, CGXDLMSValueEventArg&
     {
         data.SetUInt8(DLMS_DATA_TYPE_ARRAY);
         GXHelpers::SetObjectCount((unsigned long)m_WeightingsTable.size(), data);
-        for (std::vector<std::vector<uint16_t>>::iterator it = m_WeightingsTable.begin(); it != m_WeightingsTable.end(); ++it)
+        for (std::vector<std::vector<uint16_t> >::iterator it = m_WeightingsTable.begin(); it != m_WeightingsTable.end(); ++it)
         {
             data.SetUInt8(DLMS_DATA_TYPE_ARRAY);
             GXHelpers::SetObjectCount((unsigned long)it->size(), data);

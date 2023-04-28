@@ -41,6 +41,9 @@
 #include <crtdbg.h>
 #endif
 
+#include "stdint.h"
+#include "stdlib.h"
+
 const unsigned char HDLC_FRAME_START_END = 0x7E;
 const unsigned long DATA_TYPE_OFFSET = 0xFF0000;
 const char AARQ_TAG = 0x60;
@@ -140,7 +143,7 @@ enum DLMS_BAUD_RATE
 enum DLMS_OPTICAL_PROTOCOL_MODE
 {
     /*
-     Protocol according to IEC 62056-21 (modes A…E),
+     Protocol according to IEC 62056-21 (modes Aï¿½E),
     */
     DLMS_OPTICAL_PROTOCOL_MODE_DEFAULT = 0,
     /*

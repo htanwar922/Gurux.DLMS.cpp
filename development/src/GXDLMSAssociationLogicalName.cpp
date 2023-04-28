@@ -59,10 +59,11 @@ void CGXDLMSAssociationLogicalName::UpdateAccessRights(CGXDLMSObject* pObj, CGXD
 int CGXDLMSAssociationLogicalName::GetAccessRights(CGXDLMSObject* pItem, CGXDLMSServer* server, CGXByteBuffer& data)
 {
     int ret;
-    int cnt = pItem->GetAttributeCount();
     data.SetUInt8(DLMS_DATA_TYPE_STRUCTURE);
     data.SetUInt8(2);
+
     data.SetUInt8(DLMS_DATA_TYPE_ARRAY);
+    int cnt = pItem->GetAttributeCount();
     GXHelpers::SetObjectCount(cnt, data);
     CGXDLMSValueEventArg e(server, pItem, 0);
 
@@ -89,6 +90,7 @@ int CGXDLMSAssociationLogicalName::GetAccessRights(CGXDLMSObject* pItem, CGXDLMS
             return ret;
         }
     }
+    
     cnt = pItem->GetMethodCount();
     data.SetUInt8(DLMS_DATA_TYPE_ARRAY);
     GXHelpers::SetObjectCount(cnt, data);
@@ -200,6 +202,7 @@ int CGXDLMSAssociationLogicalName::GetObjects(
             GXHelpers::SetData(&settings, data, DLMS_DATA_TYPE_UINT8, version);//Version
             CGXDLMSVariant ln((*it)->m_LN, 6, DLMS_DATA_TYPE_OCTET_STRING);
             GXHelpers::SetData(&settings, data, DLMS_DATA_TYPE_OCTET_STRING, ln);//LN
+            printf("\r\nHERE HERE %s\r\n", ln.ToString().c_str());
             //Access rights.
             if ((ret = GetAccessRights(*it, e.GetServer(), data)) != 0)
             {
@@ -216,6 +219,7 @@ int CGXDLMSAssociationLogicalName::GetObjects(
             }
         }
     }
+    printf("DATA %s\r\n", data.ToHexString(true).c_str());
     return DLMS_ERROR_CODE_OK;
 }
 
@@ -708,6 +712,7 @@ int CGXDLMSAssociationLogicalName::GetValue(CGXDLMSSettings& settings, CGXDLMSVa
     }
     if (e.GetIndex() == 2)
     {
+        printf("Here we are\r\n");
         e.SetByteArray(true);
         CGXByteBuffer buff;
         ret = GetObjects(settings, e, buff);

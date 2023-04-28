@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"*.init": "makefile",
+			"cstdint": "cpp",
+			"getopt.h": "c"
+		}
+	}
+}

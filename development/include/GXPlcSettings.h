@@ -41,6 +41,8 @@
 #include "GXDLMSPlcRegister.h"
 #include "GXDLMSPlcMeterInfo.h"
 
+using namespace std;
+
 class CGXDLMSSettings;
 
 // PLC communication settings.

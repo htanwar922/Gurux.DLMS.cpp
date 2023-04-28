@@ -4,7 +4,7 @@ TARGET   = gurux.dlms.server.bin
 CC       = g++
 
 # compiling flags here
-CFLAGS   = -c
+CFLAGS   = -c -std=c++11
 
 LINKER   = g++ -o
 
