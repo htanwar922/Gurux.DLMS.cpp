@@ -56,7 +56,7 @@ void CGXCipher::Init(
     m_SystemTitle.Set(systemTitle, count);
     m_BlockCipherKey.Set(BLOCKCIPHERKEY, sizeof(BLOCKCIPHERKEY));
     m_AuthenticationKey.Set(AUTHENTICATIONKEY, sizeof(AUTHENTICATIONKEY));
-    m_SecuritySuite = DLMS_SECURITY_SUITE_V1;
+    m_SecuritySuite = DLMS_SECURITY_SUITE_V0;
 }
 
 CGXCipher::CGXCipher(CGXByteBuffer& systemTitle)
@@ -253,53 +253,33 @@ int CGXCipher::Int(uint32_t* rk,
         }
         return 0;
     }
-
+    if (keyBits != 256)
+    {
+        return DLMS_ERROR_CODE_INVALID_PARAMETER;
+    }
     rk[4] = GETU32(cipherKey + 16);
     rk[5] = GETU32(cipherKey + 20);
-
-    if (keyBits == 192)
-    {
-        for (i = 0; i < 8; i++)
-        {
-            temp = rk[5];
-            rk[6] = rk[0] ^ TE421(temp) ^ TE432(temp) ^
-                TE443(temp) ^ TE414(temp) ^ RCON(i);
-            rk[7] = rk[1] ^ rk[6];
-            rk[8] = rk[2] ^ rk[7];
-            rk[9] = rk[3] ^ rk[8];
-            if (i == 7)
-                return 12;
-            rk[10] = rk[4] ^ rk[9];
-            rk[11] = rk[5] ^ rk[10];
-            rk += 6;
-        }
-    }
-
     rk[6] = GETU32(cipherKey + 24);
     rk[7] = GETU32(cipherKey + 28);
-
-    if (keyBits == 256)
+    for (i = 0; i < 7; i++)
     {
-        for (i = 0; i < 7; i++)
-        {
-            temp = rk[7];
-            rk[8] = rk[0] ^ TE421(temp) ^ TE432(temp) ^
-                TE443(temp) ^ TE414(temp) ^ RCON(i);
-            rk[9] = rk[1] ^ rk[8];
-            rk[10] = rk[2] ^ rk[9];
-            rk[11] = rk[3] ^ rk[10];
-            if (i == 6)
-                return 14;
-            temp = rk[11];
-            rk[12] = rk[4] ^ TE411(temp) ^ TE422(temp) ^
-                TE433(temp) ^ TE444(temp);
-            rk[13] = rk[5] ^ rk[12];
-            rk[14] = rk[6] ^ rk[13];
-            rk[15] = rk[7] ^ rk[14];
-            rk += 8;
-        }
+        temp = rk[7];
+        rk[8] = rk[0] ^ TE421(temp) ^ TE432(temp) ^
+            TE443(temp) ^ TE414(temp) ^ RCON(i);
+        rk[9] = rk[1] ^ rk[8];
+        rk[10] = rk[2] ^ rk[9];
+        rk[11] = rk[3] ^ rk[10];
+        if (i == 6)
+            return 0;
+        temp = rk[11];
+        rk[12] = rk[4] ^ TE411(temp) ^ TE422(temp) ^
+            TE433(temp) ^ TE444(temp);
+        rk[13] = rk[5] ^ rk[12];
+        rk[14] = rk[6] ^ rk[13];
+        rk[15] = rk[7] ^ rk[14];
+        rk += 8;
     }
-    return DLMS_ERROR_CODE_INVALID_PARAMETER;
+    return 0;
 }
 
 void CGXCipher::AesEncrypt(
@@ -550,7 +530,7 @@ void CGXCipher::AesGcmGhash(const unsigned char* H, const unsigned char* aad, in
     unsigned char len_buf[16];
     GetGHash(H, aad, aad_len, S);
     GetGHash(H, crypt, crypt_len, S);
-    //Here is expected that data is newer longger than 32 bit.
+    //Here is expected that data is never longer than 32 bit.
     //This is done because microcontrollers show warning here.
     PUT32(len_buf, (unsigned long)0);
     PUT32(len_buf + 4, (unsigned long)(aad_len * 8));
@@ -560,6 +540,7 @@ void CGXCipher::AesGcmGhash(const unsigned char* H, const unsigned char* aad, in
 }
 
 int CGXCipher::Encrypt(
+    DLMS_SECURITY_SUITE suite,
     DLMS_SECURITY security,
     DLMS_COUNT_TYPE type,
     unsigned long frameCounter,
@@ -569,11 +550,14 @@ int CGXCipher::Encrypt(
     CGXByteBuffer& input,
     bool encrypt)
 {
+#ifdef _DEBUG
 #if defined(_WIN32) || defined(_WIN64) || defined(__linux__)//If Windows or Linux
-    //    printf("System title: %s\r\n", systemTitle.ToHexString().c_str());
-    //    printf("key: %s\r\n", key.ToHexString().c_str());
-    //    printf("Authentication Key: %s\r\n", m_AuthenticationKey.ToHexString().c_str());
+    // sprintf("System title: %s\r\n", systemTitle.ToHexString().c_str());
+    // sprintf("key: %s\r\n", key.ToHexString().c_str());
+    // sprintf("Authentication Key: %s\r\n", m_AuthenticationKey.ToHexString().c_str());
+    // sprintf("Data: %s\r\n", input.ToHexString().c_str());
 #endif //defined(_WIN32) || defined(_WIN64) || defined(__linux__)//If Windows or Linux
+#endif // _DEBUG
     int ret;
     uint32_t aes[61] = { 0 };
     unsigned char H[16] = { 0 };
@@ -589,11 +573,18 @@ int CGXCipher::Encrypt(
     {
         return ret;
     }
-    if ((ret = Int(aes, key.m_Data, 16 * 8)) != 0)
+    if ((ret = Int(aes, key.m_Data, suite == DLMS_SECURITY_SUITE_V2 ? 32 * 8 : 16 * 8)) != 0)
     {
         return ret;
     }
-    aes[60] = 10;
+    if (suite == DLMS_SECURITY_SUITE_V2)
+    {
+        aes[60] = 14;
+    }
+    else
+    {
+        aes[60] = 10;
+    }
     //Hash subkey.
     AesEncrypt(aes, aes[60], H, H);
     Init_j0(nonse.m_Data, (unsigned char)nonse.GetSize(), H, J0);
@@ -606,12 +597,21 @@ int CGXCipher::Encrypt(
         nonse.Set(input.GetData() + input.GetSize() - 12, 12);
         input.SetSize(input.GetSize() - 12);
     }
+    unsigned char offset;
+    if (suite == DLMS_SECURITY_SUITE_V2)
+    {
+        offset = 33;
+    }
+    else
+    {
+        offset = 17;
+    }
     if (security == DLMS_SECURITY_AUTHENTICATION)
     {
-        input.Move(input.m_Position, 17, input.Available());
+        input.Move(input.m_Position, offset, input.Available());
         input.m_Position = 0;
-        input.SetUInt8(0, security);
-        memcpy(input.m_Data + 1, m_AuthenticationKey.m_Data, 16);
+        input.SetUInt8(0, security | suite);
+        memcpy(input.m_Data + 1, m_AuthenticationKey.m_Data, m_AuthenticationKey.GetSize());
         AesGcmGhash(H, input.m_Data, input.m_Size, input.m_Data, 0, S);
         if (type == DLMS_COUNT_TYPE_TAG)
         {
@@ -619,7 +619,7 @@ int CGXCipher::Encrypt(
         }
         else
         {
-            input.Move(17, 0, input.m_Size - 17);
+            input.Move(offset, 0, input.m_Size - offset);
         }
         Gctr(aes, J0, S, sizeof(S), input.m_Data + input.m_Size);
         if (encrypt)
@@ -647,12 +647,12 @@ int CGXCipher::Encrypt(
             AesGcmGctr(aes, J0, input.m_Data + input.m_Position, input.Available(), NULL);
         }
         //Count authentication.
-        input.Move(input.m_Position, 17, input.Available());
+        input.Move(input.m_Position, offset, input.Available());
         input.m_Position = 0;
-        input.SetUInt8(0, security);
-        memcpy(input.m_Data + 1, m_AuthenticationKey.m_Data, 16);
-        AesGcmGhash(H, input.m_Data, 17, input.m_Data + 17, input.m_Size - 17, S);
-        input.Move(17, 0, input.m_Size - 17);
+        input.SetUInt8(0, security | suite);
+        memcpy(input.m_Data + 1, m_AuthenticationKey.m_Data, m_AuthenticationKey.GetSize());
+        AesGcmGhash(H, input.m_Data, offset, input.m_Data + offset, input.m_Size - offset, S);
+        input.Move(offset, 0, input.m_Size - offset);
         Gctr(aes, J0, S, sizeof(S), input.m_Data + input.m_Size);
         if (!encrypt)
         {
@@ -688,7 +688,7 @@ int CGXCipher::Encrypt(
                 nonse.Set(systemTitle.GetData(), 8);
             }
             GXHelpers::SetObjectCount(5 + input.GetSize(), nonse);
-            if ((ret = nonse.SetUInt8(security)) == 0 &&
+            if ((ret = nonse.SetUInt8(security | suite)) == 0 &&
                 (ret = nonse.SetUInt32(frameCounter)) == 0)
             {
                 input.Move(0, nonse.GetSize(), input.GetSize());
@@ -781,6 +781,7 @@ int CGXCipher::Decrypt(
     }
     InvocationCounter = frameCounter;
     if ((ret = Encrypt(
+        suite,
         security,
         DLMS_COUNT_TYPE_DATA,
         frameCounter,
@@ -1021,10 +1022,15 @@ CGXByteBuffer& CGXCipher::GetSystemTitle()
     return m_SystemTitle;
 }
 
-void CGXCipher::SetSystemTitle(CGXByteBuffer& value)
+int CGXCipher::SetSystemTitle(CGXByteBuffer& value)
 {
+    if (value.GetSize() != 8)
+    {
+        return DLMS_ERROR_CODE_INVALID_PARAMETER;
+    }
     m_SystemTitle.Clear();
     m_SystemTitle.Set(value.m_Data, value.m_Size - value.m_Position);
+    return 0;
 }
 
 CGXByteBuffer& CGXCipher::GetBlockCipherKey()
@@ -1032,10 +1038,17 @@ CGXByteBuffer& CGXCipher::GetBlockCipherKey()
     return m_BlockCipherKey;
 }
 
-void CGXCipher::SetBlockCipherKey(CGXByteBuffer& value)
+int CGXCipher::SetBlockCipherKey(CGXByteBuffer& value)
 {
+    if ((m_SecuritySuite == DLMS_SECURITY_SUITE_V2 && value.GetSize() != 32) ||
+        ((m_SecuritySuite == DLMS_SECURITY_SUITE_V0 ||
+            m_SecuritySuite == DLMS_SECURITY_SUITE_V1) && value.GetSize() != 16))
+    {
+        return DLMS_ERROR_CODE_INVALID_PARAMETER;
+    }
     m_BlockCipherKey.Clear();
     m_BlockCipherKey.Set(value.m_Data, value.m_Size - value.m_Position);
+    return 0;
 }
 
 CGXByteBuffer& CGXCipher::GetAuthenticationKey()
@@ -1043,10 +1056,17 @@ CGXByteBuffer& CGXCipher::GetAuthenticationKey()
     return m_AuthenticationKey;
 }
 
-void CGXCipher::SetAuthenticationKey(CGXByteBuffer& value)
+int CGXCipher::SetAuthenticationKey(CGXByteBuffer& value)
 {
+    if ((m_SecuritySuite == DLMS_SECURITY_SUITE_V2 && value.GetSize() != 32) ||
+        ((m_SecuritySuite == DLMS_SECURITY_SUITE_V0 ||
+            m_SecuritySuite == DLMS_SECURITY_SUITE_V1) && value.GetSize() != 16))
+    {
+        return DLMS_ERROR_CODE_INVALID_PARAMETER;
+    }
     m_AuthenticationKey.Clear();
     m_AuthenticationKey.Set(value.m_Data, value.m_Size - value.m_Position);
+    return 0;
 }
 
 unsigned long CGXCipher::GetFrameCounter()
@@ -1082,4 +1102,38 @@ CGXByteBuffer& CGXCipher::GetDedicatedKey()
 void CGXCipher::SetDedicatedKey(CGXByteBuffer& value)
 {
     m_DedicatedKey = value;
+}
+
+std::pair<CGXPublicKey, CGXPrivateKey>& CGXCipher::GetKeyAgreementKeyPair()
+{
+    return m_KeyAgreementKeyPair;
+}
+
+void CGXCipher::SetKeyAgreementKeyPair(
+    std::pair<CGXPublicKey, CGXPrivateKey>& value)
+{
+    m_KeyAgreementKeyPair = value;
+}
+
+
+std::pair<CGXPublicKey, CGXPrivateKey>& CGXCipher::GetSigningKeyPair()
+{
+    return m_SigningKeyPair;
+}
+
+void CGXCipher::SetSigningKeyPair(
+    std::pair<CGXPublicKey, CGXPrivateKey>& value)
+{
+    m_SigningKeyPair = value;
+}
+
+std::vector<CGXx509Certificate>& CGXCipher::GetCertificates()
+{
+    return m_Certificates;
+}
+
+void CGXCipher::SetCertificates(
+    std::vector<CGXx509Certificate>& value)
+{
+    m_Certificates = value;
 }

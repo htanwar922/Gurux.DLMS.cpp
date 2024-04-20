@@ -124,7 +124,7 @@ std::string CGXBitString::ToBitString(unsigned int value, unsigned int count)
             }
         }
     }
-    if (sb.width() > count)
+    if ((unsigned int) sb.width() > count)
     {
         return sb.str().substr(0, (unsigned int)(sb.width() - count));
     }

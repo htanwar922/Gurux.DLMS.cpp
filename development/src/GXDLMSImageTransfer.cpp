@@ -62,28 +62,20 @@ CGXDLMSImageTransfer::~CGXDLMSImageTransfer()
     for (std::vector<CGXDLMSImageActivateInfo*>::iterator it = m_ImageActivateInfo.begin();
         it != m_ImageActivateInfo.end(); ++it)
     {
-        delete *it;
+        delete* it;
     }
     m_ImageActivateInfo.clear();
 }
-/**
- Holds the ImageBlockSize, expressed in octets,
- * which can be handled by the server
-*/
-long CGXDLMSImageTransfer::GetImageBlockSize()
+
+unsigned long CGXDLMSImageTransfer::GetImageBlockSize()
 {
     return m_ImageBlockSize;
 }
-void CGXDLMSImageTransfer::SetImageBlockSize(long value)
+void CGXDLMSImageTransfer::SetImageBlockSize(unsigned long value)
 {
     m_ImageBlockSize = value;
 }
 
-/**
- * Provides information about the transfer status of each
- * ImageBlock. Each bit in the bit-std::string provides information about
- * one individual ImageBlock.
-*/
 std::string& CGXDLMSImageTransfer::GetImageTransferredBlocksStatus()
 {
     return m_ImageTransferredBlocksStatus;
@@ -98,11 +90,11 @@ void CGXDLMSImageTransfer::SetImageTransferredBlocksStatus(std::string value)
  * NOTE If the Image is complete, the value returned should be above the
  * number of blocks calculated from the Image size and the ImageBlockSize
 */
-long CGXDLMSImageTransfer::GetImageFirstNotTransferredBlockNumber()
+unsigned long CGXDLMSImageTransfer::GetImageFirstNotTransferredBlockNumber()
 {
     return m_ImageFirstNotTransferredBlockNumber;
 }
-void CGXDLMSImageTransfer::SetImageFirstNotTransferredBlockNumber(long value)
+void CGXDLMSImageTransfer::SetImageFirstNotTransferredBlockNumber(unsigned long value)
 {
     m_ImageFirstNotTransferredBlockNumber = value;
 }
@@ -167,7 +159,7 @@ int CGXDLMSImageTransfer::ImageTransferInitiate(CGXDLMSClient* client, unsigned 
 
 int CGXDLMSImageTransfer::ImageTransferInitiate(CGXDLMSClient* client, std::string imageIdentifier, long imageSize, std::vector<CGXByteBuffer>& reply)
 {
-    return ImageTransferInitiate(client, (unsigned char*) imageIdentifier.c_str(), (unsigned char)imageIdentifier.length(), imageSize, reply);
+    return ImageTransferInitiate(client, (unsigned char*)imageIdentifier.c_str(), (unsigned char)imageIdentifier.length(), imageSize, reply);
 }
 
 // Returns image blocks to send to the meter.
@@ -184,6 +176,7 @@ int CGXDLMSImageTransfer::GetImageBlocks(CGXByteBuffer& image, std::vector<CGXBy
     for (unsigned long pos = 0; pos != cnt; ++pos)
     {
         CGXByteBuffer data;
+        CGXByteBuffer tmpImage;
         data.SetUInt8(DLMS_DATA_TYPE_STRUCTURE);
         data.SetUInt8(2);
         tmp = pos;
@@ -196,13 +189,13 @@ int CGXDLMSImageTransfer::GetImageBlocks(CGXByteBuffer& image, std::vector<CGXBy
         if (bytes < 0)
         {
             bytes = (int)(image.GetSize() - (pos * m_ImageBlockSize));
-            data.Set(&image, data.GetSize(), bytes);
+            tmpImage.Set(&image, pos * m_ImageBlockSize, bytes);
         }
         else
         {
-            data.Set(&image, data.GetSize(), m_ImageBlockSize);
+            tmpImage.Set(&image, pos * m_ImageBlockSize, m_ImageBlockSize);
         }
-        tmp = data;
+        tmp = tmpImage;
         if ((ret = GXHelpers::SetData(NULL, data, DLMS_DATA_TYPE_OCTET_STRING, tmp)) != 0)
         {
             break;
@@ -218,7 +211,7 @@ int CGXDLMSImageTransfer::ImageBlockTransfer(CGXDLMSClient* client, CGXByteBuffe
     std::vector<CGXByteBuffer> blocks;
     if ((ret = GetImageBlocks(image, blocks)) == 0)
     {
-        imageBlockCount = (unsigned long) blocks.size();
+        imageBlockCount = (unsigned long)blocks.size();
         CGXDLMSVariant tmp;
         for (std::vector<CGXByteBuffer>::iterator it = blocks.begin(); it != blocks.end(); ++it)
         {
@@ -331,11 +324,11 @@ int CGXDLMSImageTransfer::Invoke(CGXDLMSSettings& settings, CGXDLMSValueEventArg
     {
         m_ImageFirstNotTransferredBlockNumber = 0;
         m_ImageTransferredBlocksStatus = "";
-        unsigned long size = (unsigned long) e.GetParameters().Arr[0].GetSize();
-        unsigned char * imageIdentifier = e.GetParameters().Arr[0].byteArr;
+        unsigned long size = (unsigned long)e.GetParameters().Arr[0].GetSize();
+        unsigned char* imageIdentifier = e.GetParameters().Arr[0].byteArr;
         int ImageSize = e.GetParameters().Arr[1].ToInteger();
         m_ImageTransferStatus = DLMS_IMAGE_TRANSFER_STATUS_INITIATED;
-        CGXDLMSImageActivateInfo *item = NULL;
+        CGXDLMSImageActivateInfo* item = NULL;
         for (std::vector<CGXDLMSImageActivateInfo*>::iterator it = m_ImageActivateInfo.begin(); it != m_ImageActivateInfo.end(); ++it)
         {
             if ((*it)->GetIdentification().Compare(imageIdentifier, size) == 0)
@@ -539,7 +532,7 @@ int CGXDLMSImageTransfer::SetValue(CGXDLMSSettings& settings, CGXDLMSValueEventA
         for (std::vector<CGXDLMSImageActivateInfo*>::iterator it = m_ImageActivateInfo.begin();
             it != m_ImageActivateInfo.end(); ++it)
         {
-            delete *it;
+            delete* it;
         }
         m_ImageActivateInfo.clear();
         if (e.GetValue().vt == DLMS_DATA_TYPE_ARRAY)

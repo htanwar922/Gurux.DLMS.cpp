@@ -154,6 +154,7 @@ void CGXDLMSNtpSetup::GetValues(std::vector<std::string>& values)
         sb << '}';
     }
     sb << ']';
+    values.push_back(sb.str());
     values.push_back(m_ClientKey.ToString());
 }
 

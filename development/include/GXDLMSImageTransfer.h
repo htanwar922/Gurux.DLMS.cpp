@@ -48,9 +48,9 @@ http://www.gurux.fi/Gurux.DLMS.Objects.GXDLMSImageTransfer
 */
 class CGXDLMSImageTransfer : public CGXDLMSObject
 {
-    long m_ImageBlockSize;
+    unsigned long m_ImageBlockSize;
     std::string m_ImageTransferredBlocksStatus;
-    long m_ImageFirstNotTransferredBlockNumber;
+    unsigned long m_ImageFirstNotTransferredBlockNumber;
     bool m_ImageTransferEnabled;
     DLMS_IMAGE_TRANSFER_STATUS m_ImageTransferStatus;
     std::vector<CGXDLMSImageActivateInfo*> m_ImageActivateInfo;
@@ -70,8 +70,8 @@ public:
      Holds the ImageBlockSize, expressed in octets,
      * which can be handled by the server
     */
-    long GetImageBlockSize();
-    void SetImageBlockSize(long value);
+    unsigned long GetImageBlockSize();
+    void SetImageBlockSize(unsigned long value);
 
     /**
      * Provides information about the transfer status of each
@@ -86,8 +86,8 @@ public:
      * NOTE If the Image is complete, the value returned should be above the
      * number of blocks calculated from the Image size and the ImageBlockSize
     */
-    long GetImageFirstNotTransferredBlockNumber();
-    void SetImageFirstNotTransferredBlockNumber(long value);
+    unsigned long GetImageFirstNotTransferredBlockNumber();
+    void SetImageFirstNotTransferredBlockNumber(unsigned long value);
 
     /**
      * Controls enabling the Image transfer process. The method can

@@ -517,7 +517,7 @@ int CGXDLMSSFSKPhyMacSetUp::SetValue(CGXDLMSSettings& settings, CGXDLMSValueEven
         m_Repeater = (DLMS_REPEATER)e.GetValue().ToInteger();
         break;
     case 11:
-        m_RepeaterStatus = e.GetValue().ToInteger();
+        m_RepeaterStatus = e.GetValue().ToInteger() != 0;
         break;
     case 12:
         m_MinDeltaCredit = e.GetValue().ToInteger();
@@ -526,7 +526,7 @@ int CGXDLMSSFSKPhyMacSetUp::SetValue(CGXDLMSSettings& settings, CGXDLMSValueEven
         m_InitiatorMacAddress = e.GetValue().ToInteger();
         break;
     case 14:
-        m_SynchronizationLocked = e.GetValue().ToInteger();
+        m_SynchronizationLocked = e.GetValue().ToInteger() != 0;
         break;
     case 15:
         m_TransmissionSpeed = (DLMS_BAUD_RATE) e.GetValue().ToInteger();

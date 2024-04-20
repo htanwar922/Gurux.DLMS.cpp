@@ -51,6 +51,7 @@ CGXDLMSPushSetup::CGXDLMSPushSetup(std::string ln, unsigned short sn) :
     GXHelpers::SetLogicalName("0.7.25.9.0.255", m_LN);
     m_Service = DLMS_SERVICE_TYPE_TCP;
     m_Message = DLMS_MESSAGE_TYPE_COSEM_APDU;
+    m_PortReference = NULL;
 }
 
 //LN Constructor.
@@ -86,25 +87,36 @@ void CGXDLMSPushSetup::SetMessageType(DLMS_MESSAGE_TYPE value)
 {
     m_Message = value;
 }
-// Returns amount of attributes.
+
 int CGXDLMSPushSetup::GetAttributeCount()
 {
-    return 7;
+    if (m_Version == 0)
+    {
+        return 7;
+    }
+    if (m_Version == 1)
+    {
+        return 10;
+    }
+    return 13;
 }
 
 // Returns amount of methods.
 int CGXDLMSPushSetup::GetMethodCount()
 {
-    return 1;
+    if (m_Version < 2)
+    {
+        return 1;
+    }
+    return 2;
 }
 
 void CGXDLMSPushSetup::GetValues(std::vector<std::string>& values)
 {
     values.clear();
-    std::string ln;
-    GetLogicalName(ln);
-    values.push_back(ln);
-
+    std::string str;
+    GetLogicalName(str);
+    values.push_back(str);
     std::stringstream sb;
     sb << '[';
     bool empty = true;
@@ -115,7 +127,7 @@ void CGXDLMSPushSetup::GetValues(std::vector<std::string>& values)
             sb << ", ";
         }
         empty = false;
-        std::string str;
+        str.clear();
         it->first->GetLogicalName(str);
         sb.write(str.c_str(), str.size());
     }
@@ -133,14 +145,15 @@ void CGXDLMSPushSetup::GetValues(std::vector<std::string>& values)
     sb.str(std::string());
     sb << '[';
     empty = true;
-    for (std::vector<std::pair<CGXDateTime, CGXDateTime> >::iterator it = m_CommunicationWindow.begin(); it != m_CommunicationWindow.end(); ++it)
+    std::vector<std::pair<CGXDateTime, CGXDateTime> >::iterator it;
+    for (it = m_CommunicationWindow.begin(); it != m_CommunicationWindow.end(); ++it)
     {
         if (!empty)
         {
             sb << ", ";
         }
         empty = false;
-        std::string str = it->first.ToString();
+        str = it->first.ToString();
         sb.write(str.c_str(), str.size());
         sb << " ";
         str = it->second.ToString();
@@ -151,7 +164,64 @@ void CGXDLMSPushSetup::GetValues(std::vector<std::string>& values)
 
     values.push_back(CGXDLMSVariant(m_RandomisationStartInterval).ToString());
     values.push_back(CGXDLMSVariant(m_NumberOfRetries).ToString());
-    values.push_back(CGXDLMSVariant(m_RepetitionDelay).ToString());
+    if (m_Version < 2)
+    {
+        values.push_back(CGXDLMSVariant(m_RepetitionDelay).ToString());
+    }
+    else
+    {
+        str = std::to_string(m_RepetitionDelay2.GetMax());
+        str += ", ";
+        str += std::to_string(m_RepetitionDelay2.GetExponent());
+        str += ", ";
+        str += std::to_string(m_RepetitionDelay2.GetMax());
+        values.push_back(sb.str());
+        str.clear();
+        if (m_PortReference != NULL)
+        {
+            m_PortReference->GetLogicalName(str);
+        }
+        values.push_back(str);
+
+        str = std::to_string(m_PushClientSAP);
+        values.push_back(str);
+
+        sb.str(std::string());
+        sb << '[';
+        empty = true;
+        std::vector<CGXPushProtectionParameters>::iterator it;
+        for (it = m_PushProtectionParameters.begin();
+            it != m_PushProtectionParameters.end(); ++it)
+        {
+            if (!empty)
+            {
+                sb << ", ";
+            }
+            empty = false;
+            sb << "{";
+            sb << std::to_string(it->GetProtectionType());
+            sb << ", ";
+            sb << it->GetTransactionId().ToString();
+            sb << ", ";
+            sb << it->GetOriginatorSystemTitle().ToString();
+            sb << ", ";
+            sb << it->GetRecipientSystemTitle().ToString();
+            sb << ", ";
+            sb << it->GetOtherInformation().ToString();
+            sb << ", ";
+            str = it->GetKeyInfo().ToString();
+            sb << "}";
+        }
+        sb << ']';
+        values.push_back(sb.str());
+
+        str = std::to_string(m_PushOperationMethod);
+        values.push_back(str);
+        str = m_ConfirmationParameters.ToString();
+        values.push_back(str);
+        str = m_LastConfirmationDateTime.ToString();
+        values.push_back(str);
+    }
 }
 
 void CGXDLMSPushSetup::GetAttributeIndexToRead(bool all, std::vector<int>& attributes)
@@ -192,6 +262,42 @@ void CGXDLMSPushSetup::GetAttributeIndexToRead(bool all, std::vector<int>& attri
     {
         attributes.push_back(7);
     }
+    if (m_Version > 0)
+    {
+        // PortReference
+        if (all || CanRead(8))
+        {
+            attributes.push_back(8);
+        }
+        // PushClientSAP
+        if (all || CanRead(9))
+        {
+            attributes.push_back(9);
+        }
+        // PushProtectionParameters
+        if (all || CanRead(10))
+        {
+            attributes.push_back(10);
+        }
+        if (m_Version < 1)
+        {
+            // PushOperationMethod
+            if (all || CanRead(11))
+            {
+                attributes.push_back(11);
+            }
+            // ConfirmationParameters
+            if (all || CanRead(12))
+            {
+                attributes.push_back(12);
+            }
+            // LastConfirmationDateTime
+            if (all || CanRead(13))
+            {
+                attributes.push_back(13);
+            }
+        }
+    }
 }
 
 int CGXDLMSPushSetup::GetDataType(int index, DLMS_DATA_TYPE& type)
@@ -223,11 +329,61 @@ int CGXDLMSPushSetup::GetDataType(int index, DLMS_DATA_TYPE& type)
     }
     else if (index == 7)
     {
-        type = DLMS_DATA_TYPE_UINT16;
+        if (m_Version < 2)
+        {
+            type = DLMS_DATA_TYPE_UINT16;
+        }
+        else
+        {
+            type = DLMS_DATA_TYPE_STRUCTURE;
+        }
     }
     else
     {
-        return DLMS_ERROR_CODE_INVALID_PARAMETER;
+        if (m_Version > 0)
+        {
+            // PortReference
+            if (index == 8)
+            {
+                type = DLMS_DATA_TYPE_OCTET_STRING;
+            }
+            // PushClientSAP
+            if (index == 9)
+            {
+                type = DLMS_DATA_TYPE_INT8;
+            }
+            // PushProtectionParameters
+            if (index == 10)
+            {
+                type = DLMS_DATA_TYPE_ARRAY;
+            }
+            if (m_Version > 1)
+            {
+                // PushOperationMethod
+                if (index == 11)
+                {
+                    type = DLMS_DATA_TYPE_ENUM;
+                }
+                // ConfirmationParameters
+                if (index == 12)
+                {
+                    type = DLMS_DATA_TYPE_STRUCTURE;
+                }
+                // LastConfirmationDateTime
+                if (index == 13)
+                {
+                    type = DLMS_DATA_TYPE_DATETIME;
+                }
+            }
+            else
+            {
+                return DLMS_ERROR_CODE_INVALID_PARAMETER;
+            }
+        }
+        else
+        {
+            return DLMS_ERROR_CODE_INVALID_PARAMETER;
+        }
     }
     return DLMS_ERROR_CODE_OK;
 }
@@ -348,7 +504,117 @@ int CGXDLMSPushSetup::GetValue(CGXDLMSSettings& settings, CGXDLMSValueEventArg& 
     }
     if (e.GetIndex() == 7)
     {
-        e.SetValue(m_RepetitionDelay);
+        if (m_Version < 2)
+        {
+            ret = 0;
+            e.SetValue(m_RepetitionDelay);
+        }
+        else
+        {
+            e.SetByteArray(true);
+            if ((ret = buff.SetUInt8(DLMS_DATA_TYPE_STRUCTURE)) == 0 &&
+                (ret = GXHelpers::SetObjectCount(3, buff)) == 0 &&
+                (ret = GXHelpers::SetData2(&settings, buff, DLMS_DATA_TYPE_UINT16, m_RepetitionDelay2.GetMin())) == 0 &&
+                (ret = GXHelpers::SetData2(&settings, buff, DLMS_DATA_TYPE_UINT16, m_RepetitionDelay2.GetExponent())) == 0 &&
+                (ret = GXHelpers::SetData2(&settings, buff, DLMS_DATA_TYPE_UINT16, m_RepetitionDelay2.GetMax())) == 0)
+            {
+                e.SetValue(buff);
+            }
+        }
+        return ret;
+    }
+    if (e.GetIndex() == 8)
+    {
+        if ((ret = GetLogicalName(m_PortReference, tmp)) != 0)
+        {
+            return ret;
+        }
+        e.SetValue(tmp);
+        return DLMS_ERROR_CODE_OK;
+    }
+    if (e.GetIndex() == 9)
+    {
+        e.SetValue(m_PushClientSAP);
+        return DLMS_ERROR_CODE_OK;
+    }
+    if (e.GetIndex() == 10)
+    {
+        e.SetByteArray(true);
+        if ((ret = buff.SetUInt8(DLMS_DATA_TYPE_ARRAY)) == 0 &&
+            (ret = GXHelpers::SetObjectCount(m_PushProtectionParameters.size(), buff)) == 0)
+        {
+            for (std::vector<CGXPushProtectionParameters>::iterator it = m_PushProtectionParameters.begin(); it != m_PushProtectionParameters.end(); ++it)
+            {
+                if ((ret = buff.SetUInt8(DLMS_DATA_TYPE_STRUCTURE)) != 0 ||
+                    (ret = buff.SetUInt8(2)) != 0 ||
+                    (ret = GXHelpers::SetData2(&settings, buff, DLMS_DATA_TYPE_ENUM, it->GetProtectionType())) != 0 ||
+                    (ret = buff.SetUInt8(DLMS_DATA_TYPE_STRUCTURE)) != 0 ||
+                    (ret = buff.SetUInt8(5)) != 0 ||
+                    (ret = GXHelpers::SetData2(&settings, buff, DLMS_DATA_TYPE_OCTET_STRING, it->GetTransactionId())) != 0 ||
+                    (ret = GXHelpers::SetData2(&settings, buff, DLMS_DATA_TYPE_OCTET_STRING, it->GetOriginatorSystemTitle())) != 0 ||
+                    (ret = GXHelpers::SetData2(&settings, buff, DLMS_DATA_TYPE_OCTET_STRING, it->GetRecipientSystemTitle())) != 0 ||
+                    (ret = GXHelpers::SetData2(&settings, buff, DLMS_DATA_TYPE_OCTET_STRING, it->GetOtherInformation())) != 0 ||
+                    (ret = buff.SetUInt8(DLMS_DATA_TYPE_STRUCTURE)) != 0 ||
+                    (ret = buff.SetUInt8(2)) != 0 ||
+                    (ret = GXHelpers::SetData2(&settings, buff, DLMS_DATA_TYPE_ENUM, it->GetKeyInfo().GetDataProtectionKeyType())) != 0 ||
+                    (ret = buff.SetUInt8(DLMS_DATA_TYPE_STRUCTURE)) != 0)
+                {
+                    break;
+                }
+                if (it->GetKeyInfo().GetDataProtectionKeyType() == DLMS_DATA_PROTECTION_KEY_TYPE_IDENTIFIED)
+                {
+                    if ((ret = buff.SetUInt8(1)) != 0 ||
+                        (ret = GXHelpers::SetData2(&settings, buff, DLMS_DATA_TYPE_ENUM,
+                            it->GetKeyInfo().GetIdentifiedKey().GetKeyType())) != 0)
+                    {
+                        break;
+                    }
+                }
+                else if (it->GetKeyInfo().GetDataProtectionKeyType() == DLMS_DATA_PROTECTION_KEY_TYPE_WRAPPED) {
+                    if ((ret = buff.SetUInt8(2)) != 0 ||
+                        (ret = GXHelpers::SetData2(&settings, buff, DLMS_DATA_TYPE_ENUM,
+                            it->GetKeyInfo().GetWrappedKey().GetKeyType())) != 0 ||
+                        (ret = GXHelpers::SetData2(&settings, buff, DLMS_DATA_TYPE_OCTET_STRING,
+                            it->GetKeyInfo().GetWrappedKey().GetKey())) != 0)
+                    {
+                        break;
+                    }
+                }
+                else if (it->GetKeyInfo().GetDataProtectionKeyType() == DLMS_DATA_PROTECTION_KEY_TYPE_AGREED) {
+                    if ((ret = buff.SetUInt8(2)) != 0 ||
+                        (ret = GXHelpers::SetData2(&settings, buff, DLMS_DATA_TYPE_OCTET_STRING,
+                            it->GetKeyInfo().GetAgreedKey().GetParameters())) != 0 ||
+                        (ret = GXHelpers::SetData2(&settings, buff, DLMS_DATA_TYPE_OCTET_STRING,
+                            it->GetKeyInfo().GetAgreedKey().GetData())) != 0)
+                    {
+                        break;
+                    }
+                }
+            }
+            e.SetValue(buff);
+        }
+        return ret;
+    }
+    if (e.GetIndex() == 11)
+    {
+        e.SetValue(m_PushOperationMethod);
+        return DLMS_ERROR_CODE_OK;
+    }
+    if (e.GetIndex() == 12)
+    {
+        e.SetByteArray(true);
+        if ((ret = buff.SetUInt8(DLMS_DATA_TYPE_STRUCTURE)) == 0 &&
+            (ret = GXHelpers::SetObjectCount(2, buff)) == 0 &&
+            (ret = GXHelpers::SetData2(&settings, buff, DLMS_DATA_TYPE_DATETIME, m_ConfirmationParameters.GetStartDate())) == 0 &&
+            (ret = GXHelpers::SetData2(&settings, buff, DLMS_DATA_TYPE_UINT32, m_ConfirmationParameters.GetInterval())) == 0)
+        {
+            e.SetValue(buff);
+        }
+        return ret;
+    }
+    if (e.GetIndex() == 13)
+    {
+        e.SetValue(m_LastConfirmationDateTime);
         return DLMS_ERROR_CODE_OK;
     }
     return DLMS_ERROR_CODE_INVALID_PARAMETER;
@@ -357,13 +623,13 @@ int CGXDLMSPushSetup::GetValue(CGXDLMSSettings& settings, CGXDLMSValueEventArg& 
 // Set value of given attribute.
 int CGXDLMSPushSetup::SetValue(CGXDLMSSettings& settings, CGXDLMSValueEventArg& e)
 {
+    std::string ln;
     if (e.GetIndex() == 1)
     {
         return SetLogicalName(this, e.GetValue());
     }
     else if (e.GetIndex() == 2)
     {
-        std::string ln;
         m_PushObjectList.clear();
         if (e.GetValue().vt == DLMS_DATA_TYPE_ARRAY)
         {
@@ -406,7 +672,8 @@ int CGXDLMSPushSetup::SetValue(CGXDLMSSettings& settings, CGXDLMSValueEventArg& 
         if (e.GetValue().vt == DLMS_DATA_TYPE_ARRAY)
         {
             int ret;
-            for (std::vector<CGXDLMSVariant>::iterator it = e.GetValue().Arr.begin(); it != e.GetValue().Arr.end(); ++it)
+            std::vector<CGXDLMSVariant>::iterator it;
+            for (it = e.GetValue().Arr.begin(); it != e.GetValue().Arr.end(); ++it)
             {
                 CGXDLMSVariant tmp;
                 if ((ret = CGXDLMSClient::ChangeType(it->Arr[0], DLMS_DATA_TYPE_DATETIME, tmp)) != 0)
@@ -433,7 +700,100 @@ int CGXDLMSPushSetup::SetValue(CGXDLMSSettings& settings, CGXDLMSValueEventArg& 
     }
     else if (e.GetIndex() == 7)
     {
-        m_RepetitionDelay = e.GetValue().ToInteger();
+        if (m_Version < 2)
+        {
+            m_RepetitionDelay = e.GetValue().ToInteger();
+        }
+        else if (e.GetValue().vt == DLMS_DATA_TYPE_STRUCTURE)
+        {
+            m_RepetitionDelay2.SetMin(e.GetValue().Arr.at(0).ToInteger());
+            m_RepetitionDelay2.SetExponent(e.GetValue().Arr.at(1).ToInteger());
+            m_RepetitionDelay2.SetMax(e.GetValue().Arr.at(2).ToInteger());
+        }
+    }
+    else if (m_Version > 0 && e.GetIndex() == 8)
+    {
+        m_PortReference = NULL;
+        if (e.GetValue().vt == DLMS_DATA_TYPE_OCTET_STRING)
+        {
+            GXHelpers::GetLogicalName(e.GetValue().byteArr, ln);
+            m_PortReference = settings.GetObjects().FindByLN(DLMS_OBJECT_TYPE_NONE, ln);
+        }
+    }
+    else if (m_Version > 0 && e.GetIndex() == 9)
+    {
+        m_PushClientSAP = e.GetValue().ToInteger();
+    }
+    else if (m_Version > 0 && e.GetIndex() == 10)
+    {
+        m_PushProtectionParameters.clear();
+        if (e.GetValue().vt == DLMS_DATA_TYPE_ARRAY)
+        {
+            CGXByteBuffer bb;
+            std::vector<CGXDLMSVariant>::iterator it;
+            for (it = e.GetValue().Arr.begin(); it != e.GetValue().Arr.end(); ++it)
+            {
+                CGXPushProtectionParameters p;
+                p.SetProtectionType((DLMS_PROTECTION_TYPE)it->Arr.at(0).ToInteger());
+                std::vector<CGXDLMSVariant> options = it->Arr.at(1).Arr;
+                bb.Clear();
+                options.at(0).GetBytes(bb);
+                p.SetTransactionId(bb);
+                bb.Clear();
+                options.at(1).GetBytes(bb);
+                p.SetOriginatorSystemTitle(bb);
+                bb.Clear();
+                options.at(2).GetBytes(bb);
+                p.SetRecipientSystemTitle(bb);
+                bb.Clear();
+                options.at(3).GetBytes(bb);
+                p.SetOtherInformation(bb);
+                std::vector<CGXDLMSVariant> keyInfo = options.at(4).Arr;
+                p.GetKeyInfo().SetDataProtectionKeyType((DLMS_DATA_PROTECTION_KEY_TYPE)keyInfo.at(0).ToInteger());
+                std::vector<CGXDLMSVariant> data = keyInfo.at(1).Arr;
+                if (p.GetKeyInfo().GetDataProtectionKeyType() == DLMS_DATA_PROTECTION_KEY_TYPE_IDENTIFIED)
+                {
+                    p.GetKeyInfo().GetIdentifiedKey().SetKeyType((DLMS_DATA_PROTECTION_IDENTIFIED_KEY_TYPE)data.at(0).ToInteger());
+                }
+                else if (p.GetKeyInfo().GetDataProtectionKeyType() == DLMS_DATA_PROTECTION_KEY_TYPE_WRAPPED)
+                {
+                    p.GetKeyInfo().GetWrappedKey().SetKeyType((DLMS_DATA_PROTECTION_WRAPPED_KEY_TYPE)data.at(0).ToInteger());
+                    bb.Clear();
+                    data.at(1).GetBytes(bb);
+                    p.GetKeyInfo().GetWrappedKey().SetKey(bb);
+                }
+                else if (p.GetKeyInfo().GetDataProtectionKeyType() == DLMS_DATA_PROTECTION_KEY_TYPE_AGREED)
+                {
+                    bb.Clear();
+                    data.at(0).GetBytes(bb);
+                    p.GetKeyInfo().GetAgreedKey().SetParameters(bb);
+                    bb.Clear();
+                    data.at(1).GetBytes(bb);
+                    p.GetKeyInfo().GetAgreedKey().SetData(bb);
+                }
+                m_PushProtectionParameters.push_back(p);
+            }
+        }
+    }
+    else if (m_Version > 1 && e.GetIndex() == 11)
+    {
+        m_PushOperationMethod = (DLMS_PUSH_OPERATION_METHOD)e.GetValue().ToInteger();
+    }
+    else if (m_Version > 1 && e.GetIndex() == 12)
+    {
+        if (e.GetValue().vt == DLMS_DATA_TYPE_STRUCTURE)
+        {
+            m_ConfirmationParameters.SetStartDate(e.GetValue().Arr.at(0).dateTime);
+            m_ConfirmationParameters.SetInterval(e.GetValue().Arr.at(0).ToInteger());
+        }
+        else
+        {
+            return DLMS_ERROR_CODE_INVALID_PARAMETER;
+        }
+    }
+    else if (m_Version > 1 && e.GetIndex() == 13)
+    {
+        m_LastConfirmationDateTime = e.GetValue().dateTime;
     }
     else
     {
@@ -488,4 +848,21 @@ int CGXDLMSPushSetup::GetPushValues(CGXDLMSClient* client,
     }
     return ret;
 }
+
+int CGXDLMSPushSetup::Activate(
+    CGXDLMSClient* client,
+    std::vector<CGXByteBuffer>& reply)
+{
+    CGXDLMSVariant data((char)0);
+    return client->Method(this, 1, data, reply);
+}
+
+int CGXDLMSPushSetup::Reset(
+    CGXDLMSClient* client,
+    std::vector<CGXByteBuffer>& reply)
+{
+    CGXDLMSVariant data((char)0);
+    return client->Method(this, 2, data, reply);
+}
+
 #endif //DLMS_IGNORE_PUSH_SETUP

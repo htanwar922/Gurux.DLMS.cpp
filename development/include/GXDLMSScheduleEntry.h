@@ -80,7 +80,7 @@ private:
     DLMS_WEEKDAYS m_ExecWeekdays;
 
     /**
-     * Perform the link to the IC “Special days table”, day_id.
+     * Perform the link to the IC Special days table, day_id.
      */
     std::string m_ExecSpecDays;
 

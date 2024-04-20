@@ -161,6 +161,8 @@ public:
 
     static void Replace(std::string& str, std::string oldString, std::string newString);
 
+    static bool EndsWith(const std::string& value, const std::string& ending);
+
     /////////////////////////////////////////////////////////////////////////////
     // Trim from start.
     /////////////////////////////////////////////////////////////////////////////
@@ -174,11 +176,11 @@ public:
     /////////////////////////////////////////////////////////////////////////////
     // Trim from both ends
     /////////////////////////////////////////////////////////////////////////////
-    static std::string& trim(std::string& s);
+    static std::string& Trim(std::string& s);
 
-    static std::string BytesToHex(unsigned char* pBytes, int count);
+    static std::string BytesToHex(const unsigned char* pBytes, int count);
 
-    static std::string BytesToHex(unsigned char* pBytes, int count, char addSpaces);
+    static std::string BytesToHex(const unsigned char* pBytes, int count, char addSpaces);
 
     /**
      * Convert std::string to byte array.
@@ -230,5 +232,26 @@ public:
 
     // Reserved for internal use.
     static unsigned char SwapBits(unsigned char value);
+
+#if defined(_WIN32) || defined(_WIN64) || defined(__linux__)
+    static int Load(std::string& path,
+        std::string& value);
+
+    static int Save(std::string& path,
+        std::string& value);
+
+#ifndef DLMS_IGNORE_DIRECTORY
+    /*Create new directory.*/
+    static int CreateDir(std::string& path);
+    /*Create new directory.*/
+    static int CreateDir(const char* path);
+
+    /*Check if the directory exists.*/
+    static bool DirectoryExists(std::string& path);
+    /*Check if the directory exists.*/
+    static  bool DirectoryExists(const char* path);
+#endif //DLMS_IGNORE_DIRECTORY
+#endif //defined(_WIN32) || defined(_WIN64) || defined(__linux__)
+
 };
 #endif //GXHELPERS_H

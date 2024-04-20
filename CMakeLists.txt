@@ -12,8 +12,12 @@ message(STATUS "\nPlatform ID : ${PLATFORM_ID}")
 # set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -fPIC -D_DEBUG -DASIO_STANDALONE -DASIO_HAS_STD_CHRONO")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_DEBUG -DASIO_STANDALONE -DASIO_HAS_STD_CHRONO")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -fPIC -D_DEBUG -DASIO_STANDALONE -DASIO_HAS_STD_CHRONO")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-reorder -Wno-unused-variable")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-compare -Wno-maybe-uninitialized")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-but-set-variable -Wno-parentheses")
 
 add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 

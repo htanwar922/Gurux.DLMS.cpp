@@ -121,14 +121,14 @@ int CGXDLMSAssociationLogicalName::UpdateSecret(CGXDLMSClient* client, std::vect
 {
     if (m_AuthenticationMechanismName.GetMechanismId() == DLMS_AUTHENTICATION_NONE)
     {
-#if defined(_WIN32) || defined(_WIN64)//Windows
+#if defined(_DEBUG)
         printf("Invalid authentication level in MechanismId.\n");
 #endif
         return DLMS_ERROR_CODE_INVALID_PARAMETER;
     }
     if (m_AuthenticationMechanismName.GetMechanismId() == DLMS_AUTHENTICATION_HIGH_GMAC)
     {
-#if defined(_WIN32) || defined(_WIN64)//Windows
+#if defined(_DEBUG)
         printf("HighGMAC secret is updated using Security setup.\n");
 #endif
         return DLMS_ERROR_CODE_INVALID_PARAMETER;
@@ -202,7 +202,6 @@ int CGXDLMSAssociationLogicalName::GetObjects(
             GXHelpers::SetData(&settings, data, DLMS_DATA_TYPE_UINT8, version);//Version
             CGXDLMSVariant ln((*it)->m_LN, 6, DLMS_DATA_TYPE_OCTET_STRING);
             GXHelpers::SetData(&settings, data, DLMS_DATA_TYPE_OCTET_STRING, ln);//LN
-            printf("\r\nHERE HERE %s\r\n", ln.ToString().c_str());
             //Access rights.
             if ((ret = GetAccessRights(*it, e.GetServer(), data)) != 0)
             {
@@ -219,7 +218,6 @@ int CGXDLMSAssociationLogicalName::GetObjects(
             }
         }
     }
-    printf("DATA %s\r\n", data.ToHexString(true).c_str());
     return DLMS_ERROR_CODE_OK;
 }
 
@@ -438,7 +436,7 @@ void CGXDLMSAssociationLogicalName::GetValues(std::vector<std::string>& values)
         }
         values.push_back(sb.str());
         sb.clear();
-        sb << (int) m_CurrentUser.first;
+        sb << (int)m_CurrentUser.first;
         sb << ':';
         sb << m_CurrentUser.second;
         values.push_back(sb.str());
@@ -712,7 +710,6 @@ int CGXDLMSAssociationLogicalName::GetValue(CGXDLMSSettings& settings, CGXDLMSVa
     }
     if (e.GetIndex() == 2)
     {
-        printf("Here we are\r\n");
         e.SetByteArray(true);
         CGXByteBuffer buff;
         ret = GetObjects(settings, e, buff);

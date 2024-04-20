@@ -140,7 +140,10 @@ int GenerateApplicationContextName(
     }
     // Add system title.
     if (!settings.IsServer() &&
-        (ciphered || settings.GetAuthentication() == DLMS_AUTHENTICATION_HIGH_GMAC))
+        (ciphered || 
+            settings.GetAuthentication() == DLMS_AUTHENTICATION_HIGH_GMAC ||
+            settings.GetAuthentication() == DLMS_AUTHENTICATION_HIGH_SHA256||
+            settings.GetAuthentication() == DLMS_AUTHENTICATION_HIGH_ECDSA))
     {
         if (cipher->GetSystemTitle().GetSize() == 0)
         {
@@ -298,7 +301,9 @@ int CGXAPDU::GenerateUserInformation(
             {
                 return ret;
             }
-            if ((ret = cipher->Encrypt(cipher->GetSecurity(),
+            if ((ret = cipher->Encrypt(
+                cipher->GetSecuritySuite(),
+                cipher->GetSecurity(),
                 DLMS_COUNT_TYPE_PACKET,
                 settings.GetCipher()->GetFrameCounter(),
                 cmd,
@@ -1299,7 +1304,7 @@ int UpdateAuthentication(
     {
         return ret;
     }
-    if (ch > DLMS_AUTHENTICATION_HIGH_SHA256)
+    if (ch > DLMS_AUTHENTICATION_HIGH_ECDSA)
     {
         return DLMS_ERROR_CODE_INVALID_TAG;
     }
@@ -1338,7 +1343,9 @@ int CGXAPDU::GetUserInformation(
     }
     if (cipher != NULL && cipher->IsCiphered())
     {
-        return cipher->Encrypt(cipher->GetSecurity(),
+        return cipher->Encrypt(
+            cipher->GetSecuritySuite(), 
+            cipher->GetSecurity(),
             DLMS_COUNT_TYPE_PACKET,
             settings.GetCipher()->GetFrameCounter(),
             DLMS_COMMAND_GLO_INITIATE_RESPONSE,

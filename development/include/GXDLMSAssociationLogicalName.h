@@ -109,12 +109,12 @@ public:
 
 
     // Contains the identifiers of the COSEM client APs within the physical devices hosting these APs,
-    // which belong to the AA modelled by the “Association LN” object.
+    // which belong to the AA modelled by the Association LN object.
     unsigned char GetClientSAP();
     void SetClientSAP(unsigned char value);
 
     // Contains the identifiers of the COSEM server (logical device) APs within the physical
-    // devices hosting these APs, which belong to the AA modelled by the “Association LN” object.
+    // devices hosting these APs, which belong to the AA modelled by the Association LN object.
     unsigned short GetServerSAP();
     void SetServerSAP(unsigned short value);
 

@@ -1884,6 +1884,211 @@ void CGXDLMSConverter::UpdateOBISCodeInformation(CGXDLMSObjectCollection& object
     }
 }
 
+DLMS_X509_NAME CGXDLMSConverter::GetNameValue(const char* value)
+{
+    DLMS_X509_NAME ret;
+    if (strcmp(value, "C") == 0)
+    {
+        ret = DLMS_X509_NAME_C;
+    }
+    else if (strcmp(value, "O") == 0)
+    {
+        ret = DLMS_X509_NAME_O;
+    }
+    else if (strcmp(value, "OU") == 0)
+    {
+        ret = DLMS_X509_NAME_OU;
+    }
+    else if (strcmp(value, "T") == 0)
+    {
+        ret = DLMS_X509_NAME_T;
+    }
+    else if (strcmp(value, "CN") == 0)
+    {
+        ret = DLMS_X509_NAME_CN;
+    }
+    else if (strcmp(value, "STREET") == 0)
+    {
+        ret = DLMS_X509_NAME_STREET;
+    }
+    else if (strcmp(value, "SERIAL_NUMBER") == 0)
+    {
+        ret = DLMS_X509_NAME_SERIAL_NUMBER;
+    }
+    else if (strcmp(value, "L") == 0)
+    {
+        ret = DLMS_X509_NAME_L;
+    }
+    else if (strcmp(value, "ST") == 0)
+    {
+        ret = DLMS_X509_NAME_ST;
+    }
+    else if (strcmp(value, "SUR_NAME") == 0)
+    {
+        ret = DLMS_X509_NAME_SUR_NAME;
+    }
+    else if (strcmp(value, "GIVEN_NAME") == 0)
+    {
+        ret = DLMS_X509_NAME_GIVEN_NAME;
+    }
+    else if (strcmp(value, "INITIALS") == 0)
+    {
+        ret = DLMS_X509_NAME_INITIALS;
+    }
+    else if (strcmp(value, "GENERATION") == 0)
+    {
+        ret = DLMS_X509_NAME_GENERATION;
+    }
+    else if (strcmp(value, "UNIQUE_IDENTIFIER") == 0)
+    {
+        ret = DLMS_X509_NAME_UNIQUE_IDENTIFIER;
+    }
+    else if (strcmp(value, "BUSINESS_CATEGORY") == 0)
+    {
+        ret = DLMS_X509_NAME_BUSINESS_CATEGORY;
+    }
+    else if (strcmp(value, "POSTAL_CODE") == 0)
+    {
+        ret = DLMS_X509_NAME_POSTAL_CODE;
+    }
+    else if (strcmp(value, "QUALIFIER") == 0)
+    {
+        ret = DLMS_X509_NAME_DN_QUALIFIER;
+    }
+    else if (strcmp(value, "PSEUDONYM") == 0)
+    {
+        ret = DLMS_X509_NAME_PSEUDONYM;
+    }
+    else if (strcmp(value, "DATE_OF_BIRTH") == 0)
+    {
+        ret = DLMS_X509_NAME_DATE_OF_BIRTH;
+    }
+    else if (strcmp(value, "PLACE_OF_BIRTH") == 0)
+    {
+        ret = DLMS_X509_NAME_PLACE_OF_BIRTH;
+    }
+    else if (strcmp(value, "GENDER") == 0)
+    {
+        ret = DLMS_X509_NAME_GENDER;
+    }
+    else if (strcmp(value, "COUNTRY_OF_CITIZENSHIP") == 0)
+    {
+        ret = DLMS_X509_NAME_COUNTRY_OF_CITIZENSHIP;
+    }
+    else if (strcmp(value, "COUNTRY_OF_RESIDENCE") == 0)
+    {
+        ret = DLMS_X509_NAME_COUNTRY_OF_RESIDENCE;
+    }
+    else if (strcmp(value, "NAME_AT_BIRTH") == 0)
+    {
+        ret = DLMS_X509_NAME_NAME_AT_BIRTH;
+    }
+    else if (strcmp(value, "POSTAL_ADDRESS") == 0)
+    {
+        ret = DLMS_X509_NAME_POSTAL_ADDRESS;
+    }
+    else if (strcmp(value, "DMD_NAME") == 0)
+    {
+        ret = DLMS_X509_NAME_DMD_NAME;
+    }
+    else if (strcmp(value, "TELEPHONE_NUMBER") == 0)
+    {
+        ret = DLMS_X509_NAME_TELEPHONE_NUMBER;
+    }
+    else if (strcmp(value, "NAME") == 0)
+    {
+        ret = DLMS_X509_NAME_NAME;
+    }
+    else if (strcmp(value, "E") == 0)
+    {
+        ret = DLMS_X509_NAME_E;
+    }
+    else if (strcmp(value, "DC") == 0)
+    {
+        ret = DLMS_X509_NAME_DC;
+    }
+    else if (strcmp(value, "NAME_UID") == 0)
+    {
+        ret = DLMS_X509_NAME_UID;
+    }
+    else
+    {
+        ret = DLMS_X509_NAME_NONE;
+    }
+    return ret;
+}
+
+const char* CGXDLMSConverter::GetName(DLMS_X509_NAME value)
+{
+    switch (value)
+    {
+    case DLMS_X509_NAME_C:
+        return "C";
+    case DLMS_X509_NAME_O:
+        return "O";
+    case DLMS_X509_NAME_OU:
+        return "OU";
+    case DLMS_X509_NAME_T:
+        return "T";
+    case DLMS_X509_NAME_CN:
+        return "CN";
+    case DLMS_X509_NAME_STREET:
+        return "STREET";
+    case DLMS_X509_NAME_SERIAL_NUMBER:
+        return "SERIAL_NUMBER";
+    case DLMS_X509_NAME_L:
+        return "L";
+    case DLMS_X509_NAME_ST:
+        return "ST";
+    case DLMS_X509_NAME_SUR_NAME:
+        return "SUR_NAME";
+    case DLMS_X509_NAME_GIVEN_NAME:
+        return "GIVEN_NAME";
+    case DLMS_X509_NAME_INITIALS:
+        return "INITIALS";
+    case DLMS_X509_NAME_GENERATION:
+        return "GENERATION";
+    case DLMS_X509_NAME_UNIQUE_IDENTIFIER:
+        return "UNIQUE_IDENTIFIER";
+    case DLMS_X509_NAME_BUSINESS_CATEGORY:
+        return "BUSINESS_CATEGORY";
+    case DLMS_X509_NAME_POSTAL_CODE:
+        return "POSTAL_CODE";
+    case DLMS_X509_NAME_DN_QUALIFIER:
+        return "DN_QUALIFIER";
+    case DLMS_X509_NAME_PSEUDONYM:
+        return "PSEUDONYM";
+    case DLMS_X509_NAME_DATE_OF_BIRTH:
+        return "DATE_OF_BIRTH";
+    case DLMS_X509_NAME_PLACE_OF_BIRTH:
+        return "PLACE_OF_BIRTH";
+    case DLMS_X509_NAME_GENDER:
+        return "GENDER";
+    case DLMS_X509_NAME_COUNTRY_OF_CITIZENSHIP:
+        return "COUNTRY_OF_CITIZENSHIP";
+    case DLMS_X509_NAME_COUNTRY_OF_RESIDENCE:
+        return "COUNTRY_OF_RESIDENCE";
+    case DLMS_X509_NAME_NAME_AT_BIRTH:
+        return "NAME_AT_BIRTH";
+    case DLMS_X509_NAME_POSTAL_ADDRESS:
+        return "POSTAL_ADDRESS";
+    case DLMS_X509_NAME_DMD_NAME:
+        return "DMD_NAME";
+    case DLMS_X509_NAME_TELEPHONE_NUMBER:
+        return "TELEPHONE_NUMBER";
+    case DLMS_X509_NAME_NAME:
+        return "NAME";
+    case DLMS_X509_NAME_E:
+        return "E";
+    case DLMS_X509_NAME_DC:
+        return "DC";
+    case DLMS_X509_NAME_UID:
+        return "UID";
+    default:
+        return NULL;
+    }
+}
+
 const char* CGXDLMSConverter::ToString(DLMS_X509_NAME value)
 {
     switch (value)
@@ -3310,117 +3515,145 @@ const char* CGXDLMSConverter::ToString(DLMS_HASH_ALGORITHM value)
 
 DLMS_HASH_ALGORITHM CGXDLMSConverter::ValueOfHashAlgorithm(const char* value)
 {
-    if (strcmp(value, "1.2.840.113549.1.1.5") == 0)
+    DLMS_HASH_ALGORITHM ret;
+    if (strcmp(value, "1.2.840.10045.4.3.2") == 0)
     {
-        return DLMS_HASH_ALGORITHM_SHA1_RSA;
-    }
-    else if (strcmp(value, "1.2.840.113549.1.1.4") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_MD5_RSA;
-    }
-    else if (strcmp(value, "1.2.840.10040.4.3") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_SHA1_DSA;
-    }
-    else if (strcmp(value, "1.3.14.3.2.29") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_SHA1_RSA1;
-    }
-    else if (strcmp(value, "1.3.14.3.2.15") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_SHA_RSA;
-    }
-    else if (strcmp(value, "1.3.14.3.2.3") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_MD5_RSA1;
-    }
-    else if (strcmp(value, "1.2.840.113549.1.1.2") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_MD2_RSA1;
-    }
-    else if (strcmp(value, "1.2.840.113549.1.1.3") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_MD4_RSA;
-    }
-    else if (strcmp(value, "1.3.14.3.2.2") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_MD4_RSA1;
-    }
-    else if (strcmp(value, "1.3.14.3.2.4") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_MD4_RSA2;
-    }
-    else if (strcmp(value, "1.3.14.7.2.3.1") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_MD2_RSA;
-    }
-    else if (strcmp(value, "1.3.14.3.2.13") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_SHA1_DSA1;
-    }
-    else if (strcmp(value, "1.3.14.3.2.27") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_DSA_SHA1;
-    }
-    else if (strcmp(value, "2.16.840.1.101.2.1.1.19") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_MOSAIC_UPDATED_SIG;
-    }
-    else if (strcmp(value, "1.3.14.3.2.26") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_SHA1_NO_SIGN;
-    }
-    else if (strcmp(value, "1.2.840.113549.2.5") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_MD5_NO_SIGN;
-    }
-    else if (strcmp(value, "2.16.840.1.101.3.4.2.1") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_SHA_256_NO_SIGN;
-    }
-    else if (strcmp(value, "2.16.840.1.101.3.4.2.2") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_SHA_384_NO_SIGN;
-    }
-    else if (strcmp(value, "2.16.840.1.101.3.4.2.3") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_SHA_512_NO_SIGN;
-    }
-    else if (strcmp(value, "1.2.840.113549.1.1.11") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_SHA_256_RSA;
-    }
-    else if (strcmp(value, "1.2.840.113549.1.1.12") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_SHA_384_RSA;
-    }
-    else if (strcmp(value, "1.2.840.113549.1.1.13") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_SHA_512_RSA;
-    }
-    else if (strcmp(value, "1.2.840.113549.1.1.10") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_RSA_SSA_PSS;
-    }
-    else if (strcmp(value, "1.2.840.10045.4.1") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_SHA1_WITH_ECDSA;
-    }
-    else if (strcmp(value, "1.2.840.10045.4.3.2") == 0)
-    {
-        return DLMS_HASH_ALGORITHM_SHA_256_WITH_ECDSA;
+        ret = DLMS_HASH_ALGORITHM_SHA_256_WITH_ECDSA;
     }
     else if (strcmp(value, "1.2.840.10045.4.3.3") == 0)
     {
-        return DLMS_HASH_ALGORITHM_SHA_384_WITH_ECDSA;
+        ret = DLMS_HASH_ALGORITHM_SHA_384_WITH_ECDSA;
+    }
+    else if (strcmp(value, "1.2.840.113549.1.1.5") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_SHA1_RSA;
+    }
+    else if (strcmp(value, "1.2.840.113549.1.1.4") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_MD5_RSA;
+    }
+    else if (strcmp(value, "1.2.840.10040.4.3") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_SHA1_DSA;
+    }
+    else if (strcmp(value, "1.3.14.3.2.29") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_SHA1_RSA1;
+    }
+    else if (strcmp(value, "1.3.14.3.2.15") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_SHA_RSA;
+    }
+    else if (strcmp(value, "1.3.14.3.2.3") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_MD5_RSA1;
+    }
+    else if (strcmp(value, "1.2.840.113549.1.1.2") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_MD2_RSA1;
+    }
+    else if (strcmp(value, "1.2.840.113549.1.1.3") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_MD4_RSA;
+    }
+    else if (strcmp(value, "1.3.14.3.2.2") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_MD4_RSA1;
+    }
+    else if (strcmp(value, "1.3.14.3.2.4") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_MD4_RSA2;
+    }
+    else if (strcmp(value, "1.3.14.7.2.3.1") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_MD2_RSA;
+    }
+    else if (strcmp(value, "1.3.14.3.2.13") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_SHA1_DSA1;
+    }
+    else if (strcmp(value, "1.3.14.3.2.27") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_DSA_SHA1;
+    }
+    else if (strcmp(value, "2.16.840.1.101.2.1.1.19") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_MOSAIC_UPDATED_SIG;
+    }
+    else if (strcmp(value, "1.3.14.3.2.26") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_SHA1_NO_SIGN;
+    }
+    else if (strcmp(value, "1.2.840.113549.2.5") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_MD5_NO_SIGN;
+    }
+    else if (strcmp(value, "2.16.840.1.101.3.4.2.1") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_SHA_256_NO_SIGN;
+    }
+    else if (strcmp(value, "2.16.840.1.101.3.4.2.2") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_SHA_384_NO_SIGN;
+    }
+    else if (strcmp(value, "2.16.840.1.101.3.4.2.3") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_SHA_512_NO_SIGN;
+    }
+    else if (strcmp(value, "1.2.840.113549.1.1.11") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_SHA_256_RSA;
+    }
+    else if (strcmp(value, "1.2.840.113549.1.1.12") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_SHA_384_RSA;
+    }
+    else if (strcmp(value, "1.2.840.113549.1.1.13") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_SHA_512_RSA;
+    }
+    else if (strcmp(value, "1.2.840.113549.1.1.10") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_RSA_SSA_PSS;
+    }
+    else if (strcmp(value, "1.2.840.10045.4.1") == 0)
+    {
+        ret = DLMS_HASH_ALGORITHM_SHA1_WITH_ECDSA;
     }
     else if (strcmp(value, "1.2.840.10045.4.3.4") == 0)
     {
-        return DLMS_HASH_ALGORITHM_SHA_512_WITH_ECDSA;
+        ret = DLMS_HASH_ALGORITHM_SHA_512_WITH_ECDSA;
     }
     else if (strcmp(value, "1.2.840.10045.4.3") == 0)
     {
-        return DLMS_HASH_ALGORITHM_SPECIFIED_ECDSA;
+        ret = DLMS_HASH_ALGORITHM_SPECIFIED_ECDSA;
     }
-    return DLMS_HASH_ALGORITHM_NONE;
+    else
+    {
+        ret = DLMS_HASH_ALGORITHM_NONE;
+    }
+    return ret;
+}
+
+int CGXDLMSConverter::KeyUsageToCertificateType(
+    DLMS_KEY_USAGE value,
+    DLMS_CERTIFICATE_TYPE& type)
+{
+    int ret = 0;
+    switch ((uint16_t) value)
+    {
+    case DLMS_KEY_USAGE_DIGITAL_SIGNATURE:
+        type = DLMS_CERTIFICATE_TYPE_DIGITAL_SIGNATURE;
+        break;
+    case DLMS_KEY_USAGE_KEY_AGREEMENT:
+        type = DLMS_CERTIFICATE_TYPE_KEY_AGREEMENT;
+        break;
+    case DLMS_KEY_USAGE_DIGITAL_SIGNATURE | DLMS_KEY_USAGE_KEY_AGREEMENT:
+        type = DLMS_CERTIFICATE_TYPE_TLS;
+        break;
+    default:
+        ret = DLMS_ERROR_CODE_INVALID_PARAMETER;
+        break;
+    }
+    return ret;
 }

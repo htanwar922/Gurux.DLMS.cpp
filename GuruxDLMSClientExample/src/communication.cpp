@@ -39,6 +39,15 @@
 #include "../../development/include/GXDLMSTranslator.h"
 #include "../../development/include/GXDLMSData.h"
 
+#include "../../development/include/GXPrivateKey.h"
+#include "../../development/include/GXPublicKey.h"
+#include "../../development/include/GXx509Certificate.h"
+#include "../../development/include/GXPkcs8.h"
+#include "../../development/include/GXPkcs10.h"
+#include "../../development/include/GXDLMSSecuritySetup.h"
+#include "../../development/include/GXCertificateRequest.h"
+#include "../../development/include/GXEcdsa.h"
+
 void CGXCommunication::WriteValue(GX_TRACE_LEVEL trace, std::string line)
 {
     if (trace > GX_TRACE_LEVEL_WARNING)
@@ -436,10 +445,53 @@ int CGXCommunication::Read(unsigned char eop, CGXByteBuffer& reply)
     return DLMS_ERROR_CODE_OK;
 }
 
+#if !defined(_WIN32) && !defined(_WIN64)//Windows
+
+static int GetLinuxBaudRate(int baudRate, unsigned short& br)
+{
+    switch (baudRate) {
+    case 110:
+        br = B110;
+        break;
+    case 300:
+        br = B300;
+        break;
+    case 600:
+        br = B600;
+        break;
+    case 1200:
+        br = B1200;
+        break;
+    case 2400:
+        br = B2400;
+        break;
+    case 4800:
+        br = B4800;
+        break;
+    case 9600:
+        br = B9600;
+        break;
+    case 19200:
+        br = B19200;
+        break;
+    case 38400:
+        br = B38400;
+        break;
+    case 57600:
+        br = B57600;
+        break;
+    default:
+        return DLMS_ERROR_CODE_INVALID_PARAMETER;
+    }
+    return 0;
+}
+#endif //!defined(_WIN32) && !defined(_WIN64)//Windows
+
 //Open serial port.
 int CGXCommunication::Open(const char* settings, int maxBaudrate)
 {
     Close();
+    int ret, len, pos;
     unsigned short baudRate;
 #if defined(_WIN32) || defined(_WIN64)
     unsigned char parity;
@@ -460,7 +512,14 @@ int CGXCommunication::Open(const char* settings, int maxBaudrate)
             printf("Serial port settings format is:COM1:9800:8None1.\n");
             return DLMS_ERROR_CODE_INVALID_PARAMETER;
         }
+#if defined(_WIN32) || defined(_WIN64)
         baudRate = atoi(tmp[1].c_str());
+#else //Linux
+        if ((ret = GetLinuxBaudRate(atoi(tmp[1].c_str()), baudRate)) != 0)
+        {
+            return ret;
+        }
+#endif        
         dataBits = atoi(tmp[2].substr(0, 1).c_str());
         tmp2 = tmp[2].substr(1, tmp[2].size() - 2);
         if (tmp2.compare("None") == 0)
@@ -525,7 +584,6 @@ int CGXCommunication::Open(const char* settings, int maxBaudrate)
     }
 
     CGXByteBuffer reply;
-    int ret, len, pos;
     unsigned char ch;
     //In Linux serial port name might be very long.
     char buff[50];
@@ -727,57 +785,36 @@ int CGXCommunication::Open(const char* settings, int maxBaudrate)
         switch (ch)
         {
         case '0':
-#if defined(_WIN32) || defined(_WIN64)
             baudRate = 300;
-#else
-            baudRate = B300;
-#endif
             break;
         case '1':
-#if defined(_WIN32) || defined(_WIN64)
             baudRate = 600;
-#else
-            baudRate = B600;
-#endif
             break;
         case '2':
-#if defined(_WIN32) || defined(_WIN64)
             baudRate = 1200;
-#else
-            baudRate = B1200;
-#endif
             break;
         case '3':
-#if defined(_WIN32) || defined(_WIN64)
             baudRate = 2400;
-#else
-            baudRate = B2400;
-#endif
             break;
         case '4':
-#if defined(_WIN32) || defined(_WIN64)
             baudRate = 4800;
-#else
-            baudRate = B4800;
-#endif
             break;
         case '5':
-#if defined(_WIN32) || defined(_WIN64)
             baudRate = 9600;
-#else
-            baudRate = B9600;
-#endif
             break;
         case '6':
-#if defined(_WIN32) || defined(_WIN64)
             baudRate = 19200;
-#else
-            baudRate = B19200;
-#endif
             break;
         default:
             return DLMS_ERROR_CODE_INVALID_PARAMETER;
         }
+#if !defined(_WIN32) && !defined(_WIN64)//Windows
+        if ((ret = GetLinuxBaudRate(baudRate, baudRate)) != 0)
+        {
+            return ret;
+        }
+#endif //!defined(_WIN32) && !defined(_WIN64)//Windows
+
         //Send ACK
         buff[0] = 0x06;
         //Send Protocol control character
@@ -955,6 +992,42 @@ int CGXCommunication::InitializeConnection()
         return ret;
     }
     reply.Clear();
+    ///////////////////////////////
+    //Load ECDSA keys from the file.
+    if (m_Parser->GetAuthentication() == DLMS_AUTHENTICATION_HIGH_ECDSA)
+    {
+        std::string str;
+        //Load private key in PKCS #8 format.
+        CGXByteBuffer& clientST = m_Parser->GetCiphering()->GetSystemTitle();
+        CGXPkcs8 key;
+        ret = CGXPkcs8::GetFilePath(ECC_P256, DLMS_CERTIFICATE_TYPE_DIGITAL_SIGNATURE,
+            clientST, str);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        ret = CGXPkcs8::Load(str, key);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        //Load meter certificate.
+        CGXx509Certificate cert;        
+        std::string sysTitle = m_Parser->GetSourceSystemTitle().ToHexString(false);
+        CGXx509Certificate::GetFilePath(ECC_P256,
+            DLMS_KEY_USAGE_DIGITAL_SIGNATURE, 
+            sysTitle, 
+            str);
+        ret = CGXx509Certificate::Load(str, cert);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        std::pair<CGXPublicKey, CGXPrivateKey> kp(cert.GetPublicKey(), 
+            key.GetPrivateKey());
+        m_Parser->GetCiphering()->SetSigningKeyPair(kp);
+    }
+
     // Get challenge Is HLS authentication is used.
     if (m_Parser->GetAuthentication() > DLMS_AUTHENTICATION_LOW)
     {
@@ -1221,6 +1294,149 @@ int CGXCommunication::ReadDataBlock(std::vector<CGXByteBuffer>& data, CGXReplyDa
             }
         }
     }
+    return ret;
+}
+
+// This method can be used to update firmware from the hex file.
+//
+int CGXCommunication::ImageUpdateFromFile(
+    CGXDLMSImageTransfer* target,
+    std::string& identifier,
+    std::string& fileName)
+{
+#if _MSC_VER > 1400
+    FILE* f = NULL;
+    fopen_s(&f, fileName.c_str(), "r");
+#else
+    FILE* f = fopen(fileName.c_str(), "r");
+#endif
+    int ret = DLMS_ERROR_CODE_INVALID_PARAMETER;
+    if (f != NULL)
+    {
+        size_t imagesize;
+        char image[101];
+        CGXByteBuffer bb;
+        while (feof(f) == 0)
+        {
+            imagesize = fread(image, sizeof(char), sizeof(image) - 1, f);
+            image[imagesize] = 0;
+            bb.SetHexString(image);
+        }
+        fclose(f);
+        ret = ImageUpdate(target, identifier, bb);
+        bb.Clear();
+    }
+    return ret;
+}
+
+int CGXCommunication::ImageUpdate(CGXDLMSImageTransfer* target,
+    std::string& identification,
+    CGXByteBuffer& image)
+{
+    int ret;
+    //Check that image transfer is enabled.
+    CGXReplyData reply;
+    std::vector<CGXByteBuffer> data;
+    if ((ret = m_Parser->Read(target, 5, data)) != 0 ||
+        (ret = ReadDataBlock(data, reply)) != 0 ||
+        (ret = m_Parser->UpdateValue(*target, 5, reply.GetValue())) != 0)
+    {
+        return ret;
+    }
+    if (!target->GetImageTransferEnabled())
+    {
+        printf("%s\r\n", "Image transfer is not enabled");
+        return DLMS_ERROR_CODE_INVALID_PARAMETER;
+    }
+
+    //Step 1: Read image block size.
+    data.clear();
+    reply.Clear();
+    if ((ret = m_Parser->Read(target, 2, data)) != 0 ||
+        (ret = ReadDataBlock(data, reply)) != 0 ||
+        (ret = m_Parser->UpdateValue(*target, 2, reply.GetValue())) != 0)
+    {
+        return ret;
+    }
+
+    // Step 2: Initiate the Image transfer process.
+    data.clear();
+    reply.Clear();
+    if ((ret = target->ImageTransferInitiate(m_Parser, identification, image.GetSize(), data)) != 0 ||
+        (ret = ReadDataBlock(data, reply)) != 0)
+    {
+        return ret;
+    }
+
+    // Step 3: Transfers ImageBlocks.
+    unsigned long imageBlockCount;
+    data.clear();
+    reply.Clear();
+    if ((ret = target->ImageBlockTransfer(m_Parser, image, imageBlockCount, data)) != 0 ||
+        (ret = ReadDataBlock(data, reply)) != 0)
+    {
+        return ret;
+    }
+
+
+    //Step 4: Check the completeness of the Image.
+    data.clear();
+    reply.Clear();
+    if ((ret = m_Parser->Read(target, 3, data)) != 0 ||
+        (ret = ReadDataBlock(data, reply)) != 0 ||
+        (ret = m_Parser->UpdateValue(*target, 3, reply.GetValue())) != 0)
+    {
+        return ret;
+    }
+
+    // Step 5: The Image is verified;
+    do
+    {
+        data.clear();
+        reply.Clear();
+        if ((ret = target->ImageVerify(m_Parser, data)) != 0 ||
+            (ret = ReadDataBlock(data, reply)) != 0)
+        {
+            if (ret != DLMS_ERROR_CODE_TEMPORARY_FAILURE)
+            {
+                return ret;
+            }
+            //Wait 10 seconds and check is verify succeeded.
+            printf("Waiting verify to complete...");
+#if defined(_WIN32) || defined(_WIN64)//Windows
+            Sleep(5000);
+#else
+            usleep(10000000);
+#endif
+        }
+    } while (ret == DLMS_ERROR_CODE_TEMPORARY_FAILURE);
+    // Step 6: Before activation, the Image is checked;
+
+    //Read image transfer status.
+    data.clear();
+    reply.Clear();
+    if ((ret = m_Parser->Read(target, 6, data)) != 0 ||
+        (ret = ReadDataBlock(data, reply)) != 0 ||
+        (ret = m_Parser->UpdateValue(*target, 6, reply.GetValue())) != 0)
+    {
+        return ret;
+    }
+
+    if (target->GetImageTransferStatus() != DLMS_IMAGE_TRANSFER_STATUS_VERIFICATION_SUCCESSFUL)
+    {
+        printf("Image transfer status is %d", target->GetImageTransferStatus());
+        return DLMS_ERROR_CODE_INVALID_PARAMETER;
+    }
+    //Step 7: Activate image.
+    data.clear();
+    reply.Clear();
+    if ((ret = target->ImageActivate(m_Parser, data)) != 0 ||
+        (ret = ReadDataBlock(data, reply)) != 0)
+    {
+        //Some meters return error here. 
+        return ret;
+    }
+    //The meter will usually reboot and the connection needs to be re-established.
     return ret;
 }
 
@@ -1760,6 +1976,411 @@ int CGXCommunication::GetProfileGenerics()
         }
     }
     return ret;
+}
+
+int CGXCommunication::GenerateCertificates(std::string& logicalName)
+{
+    if (!GXHelpers::DirectoryExists("Keys"))
+    {
+        GXHelpers::CreateDir("Keys");
+    }
+    if (!GXHelpers::DirectoryExists("Certificates"))
+    {
+        GXHelpers::CreateDir("Certificates");
+    }
+    if (!GXHelpers::DirectoryExists("Keys384"))
+    {
+        GXHelpers::CreateDir("Keys384");
+    }
+    if (!GXHelpers::DirectoryExists("Certificates384"))
+    {
+        GXHelpers::CreateDir("Certificates384");
+    }
+    std::vector<CGXx509Certificate> certs;
+    if (m_Parser->GetAuthentication() < DLMS_AUTHENTICATION_LOW)
+    {
+        printf("High authentication must be used to change the certificate keys.");
+        return DLMS_ERROR_CODE_INVALID_PARAMETER;
+    }
+    std::string str;
+    CGXReplyData reply;
+    std::vector<CGXByteBuffer> data;
+    int ret = InitializeConnection();
+    if (ret == 0)
+    {
+        CGXDLMSSecuritySetup ss(logicalName);
+        std::vector<CGXCertificateRequest> certifications;
+        //Read used security suite.
+        ret = Read(&ss, 3, str);
+        //Read client system title.
+        ret = Read(&ss, 4, str);
+        //Read server system title.
+        ret = Read(&ss, 5, str);
+        CGXByteBuffer& clientST = ss.GetClientSystemTitle();
+        if (clientST.GetSize() != 8)
+        {
+            clientST = m_Parser->GetCiphering()->GetSystemTitle();
+        }
+        //Get client subject.
+        std::string subject = CGXAsn1Converter::SystemTitleToSubject(clientST);
+        //Generate new digital signature for the client. In this example P-256 keys are used.
+        std::pair<CGXPublicKey, CGXPrivateKey> digitalKp;
+        std::pair<CGXPublicKey, CGXPrivateKey> signingKp;
+        ret = CGXEcdsa::GenerateKeyPair(ECC_P256, digitalKp);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        //Save private key in PKCS #8 format.
+        CGXPkcs8 digitalKey(digitalKp);
+        ret = CGXPkcs8::GetFilePath(ECC_P256, DLMS_CERTIFICATE_TYPE_DIGITAL_SIGNATURE,
+            clientST, str);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        ret = digitalKey.Save(str);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        //Generate x509 certificates.
+        CGXPkcs10 pkc10ClientDigital;
+        CGXPkcs10 pkc10ClientAgreement;
+        CGXPkcs10 pkc10ServerDigital;
+        CGXPkcs10 pkc10ServerAgreement;
+        ret = CGXPkcs10::CreateCertificateSigningRequest(digitalKp, subject, pkc10ClientDigital);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        //All certigicates are generated with one request.
+        certifications.push_back(CGXCertificateRequest(DLMS_CERTIFICATE_TYPE_DIGITAL_SIGNATURE, &pkc10ClientDigital));
+        //Generate new key agreement for the client. In this example P-256 keys are used.
+        ret = CGXEcdsa::GenerateKeyPair(ECC_P256, signingKp);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        //Save private key in PKCS #8 format.
+        CGXPkcs8 signingkey = CGXPkcs8(signingKp);
+        CGXPkcs8::GetFilePath(ECC_P256, DLMS_CERTIFICATE_TYPE_KEY_AGREEMENT, clientST, str);
+        ret = signingkey.Save(str);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        //Generate x509 certificates.
+        ret = CGXPkcs10::CreateCertificateSigningRequest(signingKp, subject, pkc10ClientAgreement);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        //All certigicates are generated with one request.
+        certifications.push_back(CGXCertificateRequest(DLMS_CERTIFICATE_TYPE_KEY_AGREEMENT, &pkc10ClientAgreement));
+        //Generate public/private key for digital signature.
+        ret = ss.GenerateKeyPair(m_Parser, DLMS_CERTIFICATE_TYPE_DIGITAL_SIGNATURE, data);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        if ((ret = ReadDataBlock(data, reply)) != 0)
+        {
+            return ret;
+        }
+        reply.Clear();
+        //Generate public/private key for key agreement.
+        ret = ss.GenerateKeyPair(m_Parser, DLMS_CERTIFICATE_TYPE_KEY_AGREEMENT, data);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        if ((ret = ReadDataBlock(data, reply)) != 0)
+        {
+            return ret;
+        }
+        reply.Clear();
+        //Generate certification request.
+        ret = ss.GenerateCertificate(m_Parser, DLMS_CERTIFICATE_TYPE_DIGITAL_SIGNATURE, data);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        if ((ret = ReadDataBlock(data, reply)) != 0)
+        {
+            return ret;
+        }
+        //Generate server certification.
+        ret = CGXPkcs10::FromByteArray(
+            reply.GetValue().byteArr,
+            reply.GetValue().size, pkc10ServerDigital);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        subject = CGXAsn1Converter::SystemTitleToSubject(
+            ss.GetServerSystemTitle());
+        //Validate subject.
+        if (pkc10ServerDigital.GetSubject().find(subject) == std::string::npos)
+        {
+            CGXAsn1Converter::HexSystemTitleFromSubject(pkc10ServerDigital.GetSubject(), str);
+            printf("Server system title '%s' is not the same as in the generated certificate request '%s'.",
+                ss.GetServerSystemTitle().ToHexString().c_str(),
+                str.c_str());
+            return DLMS_ERROR_CODE_INVALID_PARAMETER;
+        }
+        certifications.push_back(CGXCertificateRequest(DLMS_CERTIFICATE_TYPE_DIGITAL_SIGNATURE, &pkc10ServerDigital));
+        reply.Clear();
+
+        //Generate certification request for key agreement.
+        ret = ss.GenerateCertificate(m_Parser, DLMS_CERTIFICATE_TYPE_KEY_AGREEMENT, data);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        if ((ret = ReadDataBlock(data, reply)) != 0)
+        {
+            return ret;
+        }
+        //Generate server certification.
+        ret = CGXPkcs10::FromByteArray(
+            reply.GetValue().byteArr,
+            reply.GetValue().size, pkc10ServerAgreement);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        //Validate subject.
+        if (pkc10ServerAgreement.GetSubject().find(subject) == -1)
+        {
+            CGXAsn1Converter::HexSystemTitleFromSubject(pkc10ServerAgreement.GetSubject(), str);
+            printf("Server system title '%s' is not the same as in the generated certificate request '%s'.",
+                ss.GetServerSystemTitle().ToHexString().c_str(),
+                str.c_str());
+            return DLMS_ERROR_CODE_INVALID_PARAMETER;
+        }
+        certifications.push_back(CGXCertificateRequest(DLMS_CERTIFICATE_TYPE_KEY_AGREEMENT, &pkc10ServerAgreement));
+        reply.Clear();
+
+        //Note! There is a limit how many request you can do in a day.
+        ret = CGXPkcs10::GetCertificate(certifications, certs);
+        if (ret != 0)
+        {
+            return ret;
+        }
+        //Save server certificates.
+        for (std::vector<CGXx509Certificate>::iterator it = certs.begin();
+            it != certs.end(); ++it)
+        {
+            ret = CGXx509Certificate::GetFilePath(*it, str);
+            if (ret != 0)
+            {
+                return ret;
+            }
+            ret = (*it).Save(str);
+            if (ret != 0)
+            {
+                return ret;
+            }
+        }
+        reply.Clear();
+        //Import server certificates.
+        for (std::vector<CGXx509Certificate>::iterator it = certs.begin();
+            it != certs.end(); ++it)
+        {
+            ret = ss.ImportCertificate(m_Parser, *it, data);
+            if (ret != 0)
+            {
+                return ret;
+            }
+            if ((ret = ReadDataBlock(data, reply)) != 0)
+            {
+                return ret;
+            }
+            reply.Clear();
+        }
+        //Export server certificates and verify it.
+        for (std::vector<CGXx509Certificate>::iterator it = certs.begin();
+            it != certs.end(); ++it)
+        {
+            DLMS_CERTIFICATE_ENTITY entity;
+            CGXByteBuffer st;
+            if (it->GetSubject().find(CGXAsn1Converter::SystemTitleToSubject(ss.GetServerSystemTitle())) != -1)
+            {
+                st = ss.GetServerSystemTitle();
+                entity = DLMS_CERTIFICATE_ENTITY_SERVER;
+            }
+            else if (it->GetSubject().find(CGXAsn1Converter::SystemTitleToSubject(clientST)) != -1)
+            {
+                st = clientST;
+                entity = DLMS_CERTIFICATE_ENTITY_CLIENT;
+            }
+            else
+            {
+                //This is another certificate.
+                continue;
+            }
+            DLMS_CERTIFICATE_TYPE ct;
+            ret = CGXDLMSConverter::KeyUsageToCertificateType(it->GetKeyUsage(), ct);
+            if (ret != 0)
+            {
+                return ret;
+            }
+            ret = ss.ExportCertificateByEntity(m_Parser, entity,
+                ct, st, data);
+            if (ret != 0)
+            {
+                return ret;
+            }
+            if ((ret = ReadDataBlock(data, reply)) != 0)
+            {
+                return ret;
+            }
+            //Verify certificate.
+            CGXx509Certificate exported;
+            ret = CGXx509Certificate::FromByteArray(
+                reply.GetValue().byteArr,
+                reply.GetValue().size, exported);
+            if (ret != 0)
+            {
+                return ret;
+            }
+            if (exported.GetSerialNumber().Compare(it->GetSerialNumber()) != 0)
+            {
+                printf("Invalid server certificate.\n");
+                return DLMS_ERROR_CODE_INVALID_PARAMETER;
+            }
+            reply.Clear();
+        }
+        //Export server certificates using serial number and verify it.
+        for (std::vector<CGXx509Certificate>::iterator it = certs.begin();
+            it != certs.end(); ++it)
+        {
+            ret = ss.ExportCertificateBySerial(m_Parser,
+                it->GetSerialNumber(),
+                it->GetIssuerRaw(), data);
+            if (ret != 0)
+            {
+                return ret;
+            }
+            if ((ret = ReadDataBlock(data, reply)) != 0)
+            {
+                return ret;
+            }
+            //Verify certificate.
+            CGXx509Certificate exported;
+            ret = CGXx509Certificate::FromByteArray(
+                reply.GetValue().byteArr,
+                reply.GetValue().size, exported);
+            if (ret != 0)
+            {
+                return ret;
+            }
+            if (exported.GetSerialNumber().Compare(it->GetSerialNumber()) != 0)
+            {
+                printf("Invalid server certificate.");
+                return DLMS_ERROR_CODE_INVALID_PARAMETER;
+            }
+            reply.Clear();
+        }
+    }
+    if (ret == 0)
+    {
+        printf("The certificates have been successfully updated for the meter.\n");
+    }
+    return ret;
+}
+
+int CGXCommunication::ExportMeterCertificates(std::string& logicalName)
+{
+    std::vector<CGXByteBuffer> data;
+    std::string str;
+    int ret;
+    ret = InitializeConnection();
+    if (ret != 0)
+    {
+        return ret;
+    }
+    CGXDLMSSecuritySetup ss(logicalName);
+    //Read used security suite.
+    ret = Read(&ss, 3, str);
+    if (ret != 0)
+    {
+        return ret;
+    }
+    //Client private keys are saved to this directory.
+    //Client might be different system title for each meter.
+    if (!GXHelpers::DirectoryExists("Keys"))
+    {
+        GXHelpers::CreateDir("Keys");
+    }
+    if (!GXHelpers::DirectoryExists("Certificates"))
+    {
+        GXHelpers::CreateDir("Certificates");
+    }
+    if (!GXHelpers::DirectoryExists("Keys384"))
+    {
+        GXHelpers::CreateDir("Keys384");
+    }
+    if (!GXHelpers::DirectoryExists("Certificates384"))
+    {
+        GXHelpers::CreateDir("Certificates384");
+    }
+    //Read server system title.
+    ret = Read(&ss, 5, str);
+    if (ret != 0)
+    {
+        return ret;
+    }
+    //Read certificates.
+    ret = Read(&ss, 6, str);
+    if (ret != 0)
+    {
+        return ret;
+    }
+    //Export meter certificates and save them.
+    CGXReplyData reply;
+    std::string path;
+    for (std::vector<CGXDLMSCertificateInfo*>::iterator it = ss.GetCertificates().begin();
+        it != ss.GetCertificates().end(); ++it)
+    {
+        reply.Clear();
+        //Export certification and verify it.
+        ret = ss.ExportCertificateBySerial(m_Parser,
+            (*it)->GetSerialNumber(),
+            (*it)->GetIssuerRaw(), data);
+        if (ret != 0)
+        {
+            break;
+        }
+        if ((ret = ReadDataBlock(data, reply)) != 0)
+        {
+            break;
+        }
+        CGXx509Certificate cert;
+        ret = CGXx509Certificate::FromByteArray(
+            reply.GetValue().byteArr,
+            reply.GetValue().size, cert);
+        if (ret != 0)
+        {
+            break;
+        }
+        ret = CGXx509Certificate::GetFilePath(cert, path);
+        if (ret != 0)
+        {
+            break;
+        }
+        ret = cert.Save(path);
+        if (ret != 0)
+        {
+            break;
+        }
+    }
+    if (ret == 0)
+    {
+        printf("The certificates have been successfully imported from the meter.\n");
+    }
+    return Close();
 }
 
 int CGXCommunication::ReadAll(char* outputFile)

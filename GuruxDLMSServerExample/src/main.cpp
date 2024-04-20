@@ -91,7 +91,7 @@ int Start(int port, GX_TRACE_LEVEL trace)
     }
     printf("Logical Name DLMS Server in port %d.\r\n", port + 1);
     printf("Example connection settings:\n");
-    printf("GuruxDLMSClientExample -h localhost -p %d\n", port + 1);
+    printf("GuruxDLMSClient -h localhost -p %d\n", port + 1);
     printf("----------------------------------------------------------\n");
     ///////////////////////////////////////////////////////////////////////
     //Create Gurux DLMS server component for Short Name and start listen events.
@@ -102,7 +102,7 @@ int Start(int port, GX_TRACE_LEVEL trace)
     }
     printf("Short Name DLMS Server with IEC 62056-47 in port %d.\r\n", port + 2);
     printf("Example connection settings:\n");
-    printf("GuruxDLMSClientExample -r sn -h localhost -p %d -w\n", port + 2);
+    printf("GuruxDLMSClient -r sn -h localhost -p %d -w\n", port + 2);
     printf("----------------------------------------------------------\n");
     ///////////////////////////////////////////////////////////////////////
     //Create Gurux DLMS server component for Short Name and start listen events.
@@ -113,7 +113,11 @@ int Start(int port, GX_TRACE_LEVEL trace)
     }
     printf("Logical Name DLMS Server with IEC 62056-47 in port %d.\r\n", port + 3);
     printf("Example connection settings:\n");
-    printf("GuruxDLMSClientExample -h localhost -p %d -w\n", port + 3);
+    printf("GuruxDLMSClient -i WRAPPER "
+            "-h localhost -p %d "
+            "-a Low -P Gurux "
+            "-T 4D4D4D0000BC614E -C AuthenticationEncryption"
+            "\n", port + 3);
     printf("----------------------------------------------------------\n");
     printf("Press Enter to close application.\r\n");
     getchar();

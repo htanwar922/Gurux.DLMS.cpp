@@ -71,7 +71,7 @@ public:
     int WriteElementString(const char* name, CGXDateTime& value);
     int WriteElementString(const char* name, CGXDate& value);
     int WriteElementString(const char* name, CGXTime& value);
-
+    int WriteElementString(const char* name, bool value);
     int WriteElementString(const char* name, const std::string& value);
 
     // Write End Element tag.

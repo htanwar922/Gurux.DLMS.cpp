@@ -199,9 +199,13 @@ int CGXDLMSSha1::Final(CGXByteBuffer& data, unsigned int *digest, unsigned int *
     return 0;
 }
 
-int CGXDLMSSha1::Encrypt(CGXByteBuffer& data, CGXByteBuffer& result)
+int CGXDLMSSha1::Encrypt(
+    CGXByteBuffer& data, 
+    CGXByteBuffer& result)
 {
-    unsigned int digest[5] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0 };
+    unsigned int digest[5] = { 
+        0x67452301, 0xefcdab89, 0x98badcfe, 
+        0x10325476, 0xc3d2e1f0 };
     unsigned int transforms = 0;
     Update(data, digest, &transforms);
     return Final(data, digest, &transforms, result);

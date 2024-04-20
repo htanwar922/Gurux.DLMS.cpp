@@ -75,7 +75,8 @@ void CGXDLMSArbitrator::GetValues(std::vector<std::string>& values)
     std::stringstream sb;
     sb << "{";
     bool empty = true;
-    for (std::vector<CGXDLMSActionItem>::iterator it = m_Actions.begin(); it != m_Actions.end(); ++it)
+    for (std::vector<CGXDLMSActionItem>::iterator it = m_Actions.begin(); 
+        it != m_Actions.end(); ++it)
     {
         if (empty)
         {
@@ -96,7 +97,8 @@ void CGXDLMSArbitrator::GetValues(std::vector<std::string>& values)
     sb.clear();
     sb << "{";
     empty = true;
-    for (std::vector<std::string>::iterator it = m_PermissionsTable.begin(); it != m_PermissionsTable.end(); ++it)
+    for (std::vector<std::string>::iterator it = m_PermissionsTable.begin(); 
+        it != m_PermissionsTable.end(); ++it)
     {
         if (empty)
         {
@@ -113,7 +115,8 @@ void CGXDLMSArbitrator::GetValues(std::vector<std::string>& values)
     sb.clear();
     sb << "{";
     empty = true;
-    for (std::vector<std::vector<uint16_t> >::iterator it = m_WeightingsTable.begin(); it != m_WeightingsTable.end(); ++it)
+    for (std::vector<std::vector<uint16_t> >::iterator it = m_WeightingsTable.begin(); 
+        it != m_WeightingsTable.end(); ++it)
     {
         if (empty)
         {

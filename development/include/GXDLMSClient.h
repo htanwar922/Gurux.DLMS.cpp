@@ -615,6 +615,24 @@ public:
         std::vector<CGXByteBuffer>& reply);
 
     /**
+    * Generates a write message.
+    *
+    * @param name
+    *            Short or Logical Name.
+    * @param objectType
+    *            Object type.
+    * @param index
+    *            Attribute index where data is write.
+    * @param value
+    *            Data to Write.
+    * @param reply
+    *             Generated write message(s).
+    * Returns error status.
+    */
+    int Write(CGXDLMSVariant& name, DLMS_OBJECT_TYPE objectType,
+        int index, CGXByteBuffer& value, std::vector<CGXByteBuffer>& reply);
+
+    /**
      * Generates a write message.
      *
      * @param pObject
@@ -732,6 +750,26 @@ public:
         int methodIndex,
         CGXDLMSVariant& data,
         DLMS_DATA_TYPE dataType,
+        std::vector<CGXByteBuffer>& reply);
+
+    /**
+   * Generate Method (Action) request.
+   *
+   * @param name
+   *            Method object short name or Logical Name.
+   * @param objectType
+   *            Object type.
+   * @param methodIndex
+   *            Method index.
+   * @param value
+   *            Method data.
+   * @return DLMS action message.
+   */
+    int Method(
+        CGXDLMSVariant name,
+        DLMS_OBJECT_TYPE objectType,
+        int methodIndex,
+        CGXByteBuffer& data,
         std::vector<CGXByteBuffer>& reply);
 
     /**

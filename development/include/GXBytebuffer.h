@@ -42,6 +42,7 @@
 const unsigned char VECTOR_CAPACITY = 50;
 class CGXByteBuffer
 {
+    friend class CGXByteArray;
     friend class CGXCipher;
     unsigned char* m_Data;
     unsigned long m_Capacity;
@@ -120,6 +121,9 @@ public:
     //Add string to byte buffer.
     int AddString(const std::string& value);
 
+    //Add string to byte buffer.
+    int AddString(const std::wstring& value);
+
     int AddString(const char* value);
 
     int AttachString(char* value);
@@ -136,6 +140,8 @@ public:
     int GetUInt24(unsigned int* value);
 
     int GetUInt32(unsigned long* value);
+
+    int GetInt8(char* value);
 
     int GetInt16(short* value);
 
@@ -202,10 +208,14 @@ public:
         *
         * @param bb Byte buffer as a byte array.
         */
-    int SubArray(unsigned long index, int count, CGXByteBuffer& bb);
+    int SubArray(unsigned long index, 
+        int count, 
+        CGXByteBuffer& bb);
 
     //Move data insize byte array.
-    int Move(unsigned long srcPos, unsigned long destPos, unsigned long count);
+    int Move(unsigned long srcPos, 
+        unsigned long destPos, 
+        unsigned long count);
 
     CGXByteBuffer& operator=(CGXByteBuffer& value);
 
@@ -213,9 +223,9 @@ public:
     void SetHexString(std::string& value);
 
     //Push the given hex string as byte array into this buffer at the current position, and then increments the position.
-    void SetHexString(std::string value);
+    void SetHexString2(std::string value);
 
-        //Push the given hex string as byte array into this buffer at the current position, and then increments the position.
+    //Push the given hex string as byte array into this buffer at the current position, and then increments the position.
     void SetHexString(char* value);
 
     //Check is byte buffer ASCII string.
@@ -224,6 +234,46 @@ public:
     //Check is byte buffer ASCII string.
     bool IsAsciiString();
 
+    // Get String value from byte array.
+    int GetString(int count,
+        std::string& value);
+
+    // Get String value from byte array.
+    int GetString(unsigned long index,
+        unsigned long count,
+        std::string& value);
+
+    // Get UTF-8 value from byte array.
+    int GetStringUnicode(unsigned long index,
+        unsigned long count,
+        std::string& value);
+
+    // Get unicode string value from byte array.
+    int GetStringUnicode(unsigned long index,
+        unsigned long count,
+        std::wstring& value);
+
+    /**
+    * Convert Base64 string to byte array.
+    *
+    * input: Base64 string.
+    */
+    int FromBase64(std::string input);
+
+    /**
+   * Convert byte array to Base64 string.
+   *
+   * @param value
+   *            Byte array to convert.
+   * @return Base64 string.
+   */
+    int ToBase64(std::string& value);
+
+    CGXByteBuffer& operator=(const CGXByteBuffer& value);
+
+    /*Reverse byte array.*/
+    void Reverse(unsigned long index,
+        unsigned long count);
 };
 
 #endif //GXBYTEBUFFER_H

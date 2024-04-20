@@ -201,7 +201,7 @@ bool CGXStandardObisCodeCollection::EqualsObisCode(std::vector< std::string >& o
 // Get description.
 std::string CGXStandardObisCodeCollection::GetDescription(std::string& str)
 {
-    str = GXHelpers::trim(str);
+    str = GXHelpers::Trim(str);
     if (str.size() == 0 || str[0] != '$')
     {
         return "";
@@ -510,7 +510,7 @@ bool CGXStandardObisCodeCollection::EqualsMask(std::string& obisMask, std::strin
     unsigned char bytes[6];
     if (GetBytes(ln, bytes) != DLMS_ERROR_CODE_OK)
     {
-        return NULL;
+        return false;
     }
     std::vector< std::string > tmp = GXHelpers::Split(obisMask, '.');
     return EqualsObisCode(tmp, bytes);
@@ -564,6 +564,9 @@ static const char* GetN1CDescription(std::string& str)
     case 49:
         tmp = "Density of air";
         break;
+    default:
+        tmp = "Unknown";
+        break;
     }
     return tmp;
 }
@@ -587,7 +590,7 @@ void CGXStandardObisCodeCollection::Find(unsigned char* pObisCode, int IC, std::
             std::vector< std::string > tmp2 = GXHelpers::Split((*it)->GetDescription(), ';');
             if (tmp2.size() > 1)
             {
-                if (pObisCode != NULL && GXHelpers::trim(tmp2[1]).compare("$1") == 0)
+                if (pObisCode != NULL && GXHelpers::Trim(tmp2[1]).compare("$1") == 0)
                 {
                     desc = "$";
                     desc += GXHelpers::IntToString(pObisCode[2]);
@@ -748,14 +751,14 @@ void CGXStandardObisCodeCollection::Find(unsigned char* pObisCode, int IC, std::
                 sprintf(buff, "%d", ch);
 #endif
                 desc = desc.substr(0, begin).append(buff);
-            }
+                }
             GXHelpers::Replace(desc, ";", " ");
             GXHelpers::Replace(desc, "  ", " ");
             GXHelpers::rtrim(desc);
             obj->SetDescription(desc);
             list.push_back(obj);
+            }
         }
-    }
     //If invalid OBIS code.
     if (list.size() == 0)
     {
@@ -809,4 +812,4 @@ void CGXStandardObisCodeCollection::Find(unsigned char* pObisCode, int IC, std::
         obj->SetOBIS(obis);
         list.push_back(obj);
     }
-}
+    }

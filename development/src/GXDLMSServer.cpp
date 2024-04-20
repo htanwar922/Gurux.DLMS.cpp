@@ -1010,6 +1010,7 @@ int CGXDLMSServer::HandleCommand(
         break;
     case DLMS_COMMAND_NONE:
         // Client wants to get next block.
+        printf("Here\n");
         break;
     default:
         return DLMS_ERROR_CODE_INVALID_COMMAND;

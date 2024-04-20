@@ -196,7 +196,7 @@ public:
      * Generates data notification message.
      *
      * @param date
-     *            Date time. Set to null or Date(0) if not used
+     *            Date time. Set to NULL or Date(0) if not used
      * @param data
      *            Notification body.
      * @return Generated data notification message(s).
@@ -225,7 +225,7 @@ public:
      * Generates push setup message.
      *
      * @param date
-     *            Date time. Set to null or Date(0) if not used.
+     *            Date time. Set to NULL or Date(0) if not used.
      * @param push
      *            Target Push object.
      * @return Generated data notification message(s).

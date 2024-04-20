@@ -41,10 +41,13 @@
 class CGXDLMSSha256
 {
 private:
-    static void Transform(unsigned int *h, const unsigned char *message, unsigned int block_nb);
-    static int Final(unsigned int *h, unsigned char *block, unsigned char *digest, unsigned int len, unsigned int totalLen);
-    static int Update(unsigned int *h, unsigned char *block, CGXByteBuffer&  data, unsigned int *len, unsigned int *totalLen);
+    static void Transform(uint32_t *h, 
+        const unsigned char *message, 
+        uint32_t messageLength);
+       
 public:
-    static int Encrypt(CGXByteBuffer& data, CGXByteBuffer& crypted);
+    /*Count hash for the given data.*/
+    static int Hash(CGXByteBuffer& data,
+        CGXByteBuffer& crypted);
 };
 #endif //GXDLMSSHA256_H

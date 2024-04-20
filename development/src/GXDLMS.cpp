@@ -353,7 +353,7 @@ int CGXDLMS::GetHdlcFrame(
     }
     else if (data->GetSize() - data->GetPosition() <= frameSize)
     {
-        len = data->GetSize() - data->GetPosition();
+        len = data->Available();
         // Is last packet.
         reply.SetUInt8(0xA0 | (((7 + primaryAddress.GetSize() +
             secondaryAddress.GetSize() + len) >> 8) & 0x7));
@@ -362,7 +362,8 @@ int CGXDLMS::GetHdlcFrame(
     {
         len = frameSize;
         // More data to left.
-        reply.SetUInt8(0xA8 | ((len >> 8) & 0x7));
+        reply.SetUInt8(0xA8 | (((7 + primaryAddress.GetSize() +
+            secondaryAddress.GetSize() + len) >> 8) & 0x7));
     }
     // Frame len.
     if (len == 0)
@@ -862,6 +863,7 @@ int Cipher0(CGXDLMSLNParameters& p,
     }
     CGXByteBuffer& title = p.GetSettings()->GetCipher()->GetSystemTitle();
     ret = p.GetSettings()->GetCipher()->Encrypt(
+        p.GetSettings()->GetCipher()->GetSecuritySuite(),
         p.GetSettings()->GetCipher()->GetSecurity(),
         DLMS_COUNT_TYPE_PACKET,
         p.GetSettings()->GetCipher()->GetFrameCounter(),
@@ -1195,6 +1197,7 @@ int CGXDLMS::GetLnMessages(
     std::vector<CGXByteBuffer>& messages)
 {
     int ret;
+    messages.clear();
     CGXByteBuffer reply, tmp;
     unsigned char frame = 0;
     if (p.GetCommand() == DLMS_COMMAND_DATA_NOTIFICATION ||
@@ -1422,6 +1425,7 @@ int CGXDLMS::GetSNPdu(
     {
         CGXByteBuffer tmp;
         ret = p.GetSettings()->GetCipher()->Encrypt(
+            p.GetSettings()->GetCipher()->GetSecuritySuite(),
             p.GetSettings()->GetCipher()->GetSecurity(),
             DLMS_COUNT_TYPE_PACKET,
             p.GetSettings()->GetCipher()->GetFrameCounter(),
@@ -3149,11 +3153,11 @@ int CGXDLMS::GetPdu(
         case DLMS_COMMAND_GENERAL_DED_CIPHERING:
             if (settings.IsServer())
             {
-                HandleGloDedRequest(settings, data);
+                ret = HandleGloDedRequest(settings, data);
             }
             else
             {
-                HandleGloDedResponse(settings, data, index);
+                ret = HandleGloDedResponse(settings, data, index);
             }
             break;
         case DLMS_COMMAND_DATA_NOTIFICATION:
@@ -3169,6 +3173,16 @@ int CGXDLMS::GetPdu(
         case DLMS_COMMAND_GENERAL_CIPHERING:
             ret = HandleGeneralCiphering(settings, data);
             break;
+        case DLMS_COMMAND_NONE:     // Himanshu - added this case.
+            if (settings.IsServer())
+            {
+                ret = HandleGloDedRequest(settings, data);
+            }
+            else
+            {
+                ret = HandleGloDedResponse(settings, data, index);
+            }
+
         default:
             // Invalid DLMS command.
             data.SetCommand(DLMS_COMMAND_NONE);
@@ -3439,7 +3453,7 @@ int CGXDLMS::HandleGetResponseWithList(
             GetValueFromData(settings, reply);
             if (reply.GetValue().vt == DLMS_DATA_TYPE_NONE)
             {
-                // Increase read position if data is null. This is a special case.
+                // Increase read position if data is NULL. This is a special case.
                 reply.SetReadPosition(1 + reply.GetReadPosition());
             }
             reply.GetData().SetPosition(reply.GetReadPosition());
@@ -4127,7 +4141,7 @@ int CGXDLMS::GetValueFromData(CGXDLMSSettings& settings, CGXReplyData& reply)
     else if (info.IsComplete()
         && reply.GetCommand() == DLMS_COMMAND_DATA_NOTIFICATION)
     {
-        // If last item is null. This is a special case.
+        // If last item is NULL. This is a special case.
         reply.SetReadPosition(reply.GetData().GetPosition());
     }
     reply.GetData().SetPosition(index);
@@ -4596,11 +4610,10 @@ bool IsPlcSfskData(CGXByteBuffer& buff)
     {
         return false;
     }
-    int ret;
     uint16_t len;
-    if ((ret = buff.GetUInt16(buff.GetPosition(), &len)) != 0)
+    if (buff.GetUInt16(buff.GetPosition(), &len) != 0)
     {
-        return ret;
+        return false;
     }
     switch (len)
     {

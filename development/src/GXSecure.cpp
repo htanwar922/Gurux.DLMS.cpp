@@ -32,20 +32,25 @@
 // Full text may be retrieved at http://www.gnu.org/licenses/gpl-2.0.txt
 //---------------------------------------------------------------------------
 
+#include <stdlib.h> //rand
 #include "../include/GXSecure.h"
 #include "../include/GXDLMSMd5.h"
 #include "../include/GXDLMSSha1.h"
 #include "../include/GXDLMSSha256.h"
+#include "../include/GXEcdsa.h"
 
-#include <stdlib.h> //rand
-
-int CGXSecure::GenerateChallenge(DLMS_AUTHENTICATION authentication, CGXByteBuffer& challenge)
+int CGXSecure::GenerateChallenge(
+    DLMS_AUTHENTICATION authentication,
+    CGXByteBuffer& challenge)
 {
     // Random challenge is 8 to 64 bytes.
     // Texas Instruments accepts only 16 byte long challenge.
     // For this reason challenge size is 16 bytes at the moment.
     int len = 16;
-    //int len = rand() % 58 + 8;
+    if (authentication == DLMS_AUTHENTICATION_HIGH_ECDSA)
+    {
+        len = rand() % 32 + 32;
+    }
     unsigned char val;
     for (int pos = 0; pos != len; ++pos)
     {
@@ -170,7 +175,8 @@ int CGXSecure::Secure(
 {
     int ret = 0, pos;
     reply.Clear();
-    if (settings.GetAuthentication() == DLMS_AUTHENTICATION_HIGH)
+    if (settings.GetAuthentication() ==
+        DLMS_AUTHENTICATION_HIGH)
     {
         CGXByteBuffer s;
         int len = data.GetSize();
@@ -199,7 +205,11 @@ int CGXSecure::Secure(
     // Get server Challenge.
     CGXByteBuffer challenge;
     // Get shared secret
-    if (settings.GetAuthentication() != DLMS_AUTHENTICATION_HIGH_GMAC &&
+    if (settings.GetAuthentication() == DLMS_AUTHENTICATION_HIGH_ECDSA)
+    {
+        challenge.Set(&secret);
+    }
+    else if (settings.GetAuthentication() != DLMS_AUTHENTICATION_HIGH_GMAC &&
         settings.GetAuthentication() != DLMS_AUTHENTICATION_HIGH_SHA256)
     {
         challenge.Set(&data);
@@ -215,19 +225,42 @@ int CGXSecure::Secure(
     }
     else if (settings.GetAuthentication() == DLMS_AUTHENTICATION_HIGH_SHA256)
     {
-        return CGXDLMSSha256::Encrypt(secret, reply);
+        return CGXDLMSSha256::Hash(secret, reply);
     }
     else if (settings.GetAuthentication() == DLMS_AUTHENTICATION_HIGH_GMAC)
     {
-        CGXByteBuffer& key = settings.GetCipher()->GetBlockCipherKey();
-        ret = cipher->Encrypt(DLMS_SECURITY_AUTHENTICATION,
+        CGXByteBuffer& key = cipher->GetBlockCipherKey();
+        ret = cipher->Encrypt(
+            cipher->GetSecuritySuite(),
+            DLMS_SECURITY_AUTHENTICATION,
             DLMS_COUNT_TYPE_TAG, ic, 0, secret, key, data, true);
         if (ret == 0)
         {
-            reply.SetUInt8(DLMS_SECURITY_AUTHENTICATION);
+            reply.SetUInt8(DLMS_SECURITY_AUTHENTICATION | cipher->GetSecuritySuite());
             reply.SetUInt32(ic);
             reply.Set(&data);
         }
+    }
+    else if (settings.GetAuthentication() == DLMS_AUTHENTICATION_HIGH_ECDSA)
+    {
+        std::pair<CGXPublicKey, CGXPrivateKey>& kp =
+            cipher->GetSigningKeyPair();
+        CGXPrivateKey& key = kp.second;
+        CGXPublicKey& pub = kp.first;
+        if (pub.GetRawValue().GetSize() == 0 ||
+            key.GetRawValue().GetSize() == 0)
+        {
+#ifdef _DEBUG
+            printf("Invalid signing key pair\n");
+#endif //_DEBUG
+            return DLMS_ERROR_CODE_INVALID_PARAMETER;
+        }
+#ifdef _DEBUG
+        printf("Private signed key: %s\n", key.ToHex().c_str());
+        printf("Public signed key: %s\n", pub.ToHex().c_str());
+#endif //_DEBUG
+        CGXEcdsa sig(key);
+        ret = sig.Sign(secret, reply);
     }
     return ret;
 }

@@ -47,7 +47,7 @@ CGXDLMSCommunicationPortProtection::CGXDLMSCommunicationPortProtection() :
 CGXDLMSCommunicationPortProtection::CGXDLMSCommunicationPortProtection(std::string ln, unsigned short sn) :
     CGXDLMSObject(DLMS_OBJECT_TYPE_COMMUNICATION_PORT_PROTECTION, ln, sn)
 {
-
+    m_Port = NULL;
 }
 
 //LN Constructor.

@@ -66,6 +66,7 @@
 #endif
 
 #include "../../development/include/GXDLMSSecureClient.h"
+#include "../../development/include/GXDLMSImageTransfer.h"
 
 class CGXCommunication
 {
@@ -140,6 +141,22 @@ public:
     int ReadDataBlock(std::vector<CGXByteBuffer>& data, CGXReplyData& reply);
 
     int InitializeConnection();
+
+
+    //
+    // This method can be used to update firmware from the hex file.
+    //
+    int ImageUpdateFromFile(
+        CGXDLMSImageTransfer* target,
+        std::string& identifier,
+        std::string& fileName);
+    //
+    // This method is used to update meter firmware.
+    // 
+    int ImageUpdate(CGXDLMSImageTransfer* target,
+        std::string& identification,
+        CGXByteBuffer& data);
+
     int GetAssociationView();
 
     //Read selected object.
@@ -204,5 +221,18 @@ public:
     //Read values using Access request.
     int ReadByAccess(std::vector<CGXDLMSAccessItem>& list);
 
+    /*
+    * Export client and server certificates from the meter.
+    *
+    * logicalName: Logical name of the security setup object.
+    */
+    int ExportMeterCertificates(std::string& logicalName);
+
+    /**
+    * Generates a new server and client public/private keys and register them and import certificates to the meter.
+    *
+    * logicalName: Logical name of the security setup object.
+    */
+    int GenerateCertificates(std::string& logicalName);
 };
 #endif //GXCOMMUNICATION_H

@@ -126,34 +126,50 @@ public:
     // Update standard OBIS codes descriptions and type if defined.
     void UpdateOBISCodeInformation(CGXDLMSObjectCollection& objects);
 
+    //Get X509 name.
+    static const char* GetName(DLMS_X509_NAME value);
+
+    //Get X509 value.
+    static DLMS_X509_NAME GetNameValue(const char* value);
+
     //Converts X509 name enum value to string.
-    const char* ToString(DLMS_X509_NAME value);
+    static const char* ToString(DLMS_X509_NAME value);
 
     //Converts X509 certificate type enum value to string.
-    const char* ToString(DLMS_X509_CERTIFICATE_TYPE value);
+    static const char* ToString(DLMS_X509_CERTIFICATE_TYPE value);
 
     //Converts X509 certificate type string to enum value.
-    DLMS_X509_CERTIFICATE_TYPE ValueOfSourceDiagnosticX509CertificateType(const char* value);
+    static DLMS_X509_CERTIFICATE_TYPE ValueOfSourceDiagnosticX509CertificateType(const char* value);
 
     //Converts X509 name string to enum value.
-    DLMS_X509_NAME ValueOfx509Name(const char* value);
+    static DLMS_X509_NAME ValueOfx509Name(const char* value);
 
     //Converts X9 object identifier enum value to string.
-    const char* ToString(DLMS_X9_OBJECT_IDENTIFIER value);
+    static const char* ToString(DLMS_X9_OBJECT_IDENTIFIER value);
 
     //Converts X9 object identifier string to enum value.
-    DLMS_X9_OBJECT_IDENTIFIER ValueOfX9Identifier(const char* value);
+    static DLMS_X9_OBJECT_IDENTIFIER ValueOfX9Identifier(const char* value);
 
     //Converts PKCS object identifier enum value to string.
-    const char* ToString(DLMS_PKCS_OBJECT_IDENTIFIER value);
+    static const char* ToString(DLMS_PKCS_OBJECT_IDENTIFIER value);
 
     //Converts PKCS object identifier string to enum value.
-    DLMS_PKCS_OBJECT_IDENTIFIER ValueOfPKCSObjectIdentifier(const char* value);
+    static DLMS_PKCS_OBJECT_IDENTIFIER ValueOfPKCSObjectIdentifier(const char* value);
 
     //Converts hash algorithm enum value to string.
-    const char* ToString(DLMS_HASH_ALGORITHM value);
-
+    static const char* ToString(DLMS_HASH_ALGORITHM value);
+    
     //Converts hash algorithm string to enum value.
-    DLMS_HASH_ALGORITHM ValueOfHashAlgorithm(const char* value);
+    static DLMS_HASH_ALGORITHM ValueOfHashAlgorithm(const char* value);
+
+    /*
+    * Convert key usage to certificate type.
+    *
+    * value: Key usage.
+    * type: Certificate type.
+    */
+    static int KeyUsageToCertificateType(
+        DLMS_KEY_USAGE value,
+        DLMS_CERTIFICATE_TYPE& type);
 };
 #endif //GXDLMSCONVERTER_H

@@ -110,7 +110,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN64;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN64;_DEBUG;_LIB;DLMS_IGNORE_IP6_SETUP;DLMS_IGNORE_IP4_SETUP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
@@ -147,7 +147,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\GXAdjacentCell.cpp" />
+    <ClCompile Include="..\src\GXAsn1Context.cpp" />
+    <ClCompile Include="..\src\GXAsn1Converter.cpp" />
+    <ClCompile Include="..\src\GXAsn1Variant.cpp" />
+    <ClCompile Include="..\src\GXBigInteger.cpp" />
     <ClCompile Include="..\src\GXBitString.cpp" />
+    <ClCompile Include="..\src\GXByteArray.cpp" />
     <ClCompile Include="..\src\GXChargePerUnitScaling.cpp" />
     <ClCompile Include="..\src\GXChargeTable.cpp" />
     <ClCompile Include="..\src\GXCommodity.cpp" />
@@ -256,6 +261,7 @@
     <ClCompile Include="..\src\GXDLMSSFSKReportingSystemList.cpp" />
     <ClCompile Include="..\src\GXDLMSSha1.cpp" />
     <ClCompile Include="..\src\GXDLMSSha256.cpp" />
+    <ClCompile Include="..\src\GXDLMSSha384.cpp" />
     <ClCompile Include="..\src\GXDLMSSNCommandHandler.cpp" />
     <ClCompile Include="..\src\GXDLMSSNParameters.cpp" />
     <ClCompile Include="..\src\GXDLMSSpecialDay.cpp" />
@@ -269,9 +275,14 @@
     <ClCompile Include="..\src\GXDLMSValueEventArg.cpp" />
     <ClCompile Include="..\src\GXDLMSVariant.cpp" />
     <ClCompile Include="..\src\GXDLMSWeekProfile.cpp" />
+    <ClCompile Include="..\src\GXEcdsa.cpp" />
     <ClCompile Include="..\src\GXHdlcSettings.cpp" />
     <ClCompile Include="..\src\GXHelpers.cpp" />
+    <ClCompile Include="..\src\GXPkcs10.cpp" />
+    <ClCompile Include="..\src\GXPkcs8.cpp" />
     <ClCompile Include="..\src\GXPlcSettings.cpp" />
+    <ClCompile Include="..\src\GXPrivateKey.cpp" />
+    <ClCompile Include="..\src\GXPublicKey.cpp" />
     <ClCompile Include="..\src\GXReplyData.cpp" />
     <ClCompile Include="..\src\GXSecure.cpp" />
     <ClCompile Include="..\src\GXSerialNumberCounter.cpp" />
@@ -280,12 +291,29 @@
     <ClCompile Include="..\src\GXStandardObisCodeCollection.cpp" />
     <ClCompile Include="..\src\GXTokenGatewayConfiguration.cpp" />
     <ClCompile Include="..\src\GXUnitCharge.cpp" />
+    <ClCompile Include="..\src\GXx509Certificate.cpp" />
     <ClCompile Include="..\src\GXXmlReader.cpp" />
     <ClCompile Include="..\src\GXXmlWriter.cpp" />
     <ClCompile Include="..\src\GXXmlWriterSettings.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\GXAsn1Base.h" />
+    <ClInclude Include="..\include\GXAsn1BitString.h" />
+    <ClInclude Include="..\include\GXAsn1Context.h" />
+    <ClInclude Include="..\include\GXAsn1Converter.h" />
+    <ClInclude Include="..\include\GXAsn1Helpers.h" />
+    <ClInclude Include="..\include\GXAsn1Ia5String.h" />
+    <ClInclude Include="..\include\GXAsn1Integer.h" />
+    <ClInclude Include="..\include\GXAsn1ObjectIdentifier.h" />
+    <ClInclude Include="..\include\GXAsn1Sequence.h" />
+    <ClInclude Include="..\include\GXAsn1Set.h" />
+    <ClInclude Include="..\include\GXAsn1Time.h" />
+    <ClInclude Include="..\include\GXAsn1Utf8String.h" />
+    <ClInclude Include="..\include\GXAsn1Variant.h" />
+    <ClInclude Include="..\include\GXBigInteger.h" />
     <ClInclude Include="..\include\GXBitString.h" />
+    <ClInclude Include="..\include\GXByteArray.h" />
+    <ClInclude Include="..\include\GXCertificateRequest.h" />
     <ClInclude Include="..\include\GXChargePerUnitScaling.h" />
     <ClInclude Include="..\include\chipperingenums.h" />
     <ClInclude Include="..\include\Enums.h" />
@@ -302,6 +330,7 @@
     <ClInclude Include="..\include\GXCommodity.h" />
     <ClInclude Include="..\include\GXCreditChargeConfiguration.h" />
     <ClInclude Include="..\include\GXCurrency.h" />
+    <ClInclude Include="..\include\GXCurve.h" />
     <ClInclude Include="..\include\GXDate.h" />
     <ClInclude Include="..\include\GXDateTime.h" />
     <ClInclude Include="..\include\GXDLMS.h" />
@@ -329,6 +358,9 @@
     <ClInclude Include="..\include\GXDLMSConverter.h" />
     <ClInclude Include="..\include\GXDLMSCredit.h" />
     <ClInclude Include="..\include\GXDLMSData.h" />
+    <ClInclude Include="..\include\GXDLMSDataProtectionAgreedKey.h" />
+    <ClInclude Include="..\include\GXDLMSDataProtectionIdentifiedKey.h" />
+    <ClInclude Include="..\include\GXDLMSDataProtectionWrappeddKey.h" />
     <ClInclude Include="..\include\GXDLMSDayProfile.h" />
     <ClInclude Include="..\include\GXDLMSDayProfileAction.h" />
     <ClInclude Include="..\include\GXDLMSDemandRegister.h" />
@@ -407,6 +439,7 @@
     <ClInclude Include="..\include\GXDLMSSFSKReportingSystemList.h" />
     <ClInclude Include="..\include\GXDLMSSha1.h" />
     <ClInclude Include="..\include\GXDLMSSha256.h" />
+    <ClInclude Include="..\include\GXDLMSSha384.h" />
     <ClInclude Include="..\include\GXDLMSSNCommandHandler.h" />
     <ClInclude Include="..\include\GXDLMSSNParameters.h" />
     <ClInclude Include="..\include\GXDLMSSpecialDay.h" />
@@ -421,6 +454,8 @@
     <ClInclude Include="..\include\GXDLMSValueEventCollection.h" />
     <ClInclude Include="..\include\GXDLMSVariant.h" />
     <ClInclude Include="..\include\GXDLMSWeekProfile.h" />
+    <ClInclude Include="..\include\GXEccPoint.h" />
+    <ClInclude Include="..\include\GXEcdsa.h" />
     <ClInclude Include="..\include\GXHdlcSettings.h" />
     <ClInclude Include="..\include\GXHelpers.h" />
     <ClInclude Include="..\include\GXIgnore.h" />
@@ -430,7 +465,14 @@
     <ClInclude Include="..\include\GXMacPhyCommunication.h" />
     <ClInclude Include="..\include\GXMBusClientData.h" />
     <ClInclude Include="..\include\GXNeighborDiscoverySetup.h" />
+    <ClInclude Include="..\include\GXPkcs10.h" />
+    <ClInclude Include="..\include\GXPkcs8.h" />
     <ClInclude Include="..\include\GXPlcSettings.h" />
+    <ClInclude Include="..\include\GXPrivateKey.h" />
+    <ClInclude Include="..\include\GXPublicKey.h" />
+    <ClInclude Include="..\include\GXPushConfirmationParameter.h" />
+    <ClInclude Include="..\include\GXPushProtectionParameters.h" />
+    <ClInclude Include="..\include\GXRepetitionDelay.h" />
     <ClInclude Include="..\include\GXReplyData.h" />
     <ClInclude Include="..\include\GXSecure.h" />
     <ClInclude Include="..\include\GXSerialNumberCounter.h" />

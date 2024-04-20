@@ -55,7 +55,7 @@ static void ShowHelp()
     printf(" -s \t Server address. (Default: 1)\n");
     printf(" -n \t Server address as serial number.\n");
     printf(" -l \t Logical Server address.\n");
-    printf(" -r [sn, sn]\t Short name or Logican Name (default) referencing is used.\n");
+    printf(" -r [sn, ln]\t Short name or Logical Name (default) referencing is used.\n");
     printf(" -t Trace messages.\n");
     printf(" -g \"0.0.1.0.0.255:1; 0.0.1.0.0.255:2\" Get selected object(s) with given attribute index.\n");
     printf(" -C \t Security Level. (None, Authentication, Encrypted, AuthenticationEncryption)\n");
@@ -434,7 +434,7 @@ int main(int argc, char* argv[])
             bb.SetHexString(dedicatedKey);
             cl.GetCiphering()->SetDedicatedKey(bb);
         }
-        CGXCommunication comm(&cl, 5000, trace, invocationCounter);
+        CGXCommunication comm(&cl, 50000, trace, invocationCounter);    // __INACTIVITY__TIMEOUT__
 
         if (port != 0 || address != NULL)
         {

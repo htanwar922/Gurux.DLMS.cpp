@@ -36,6 +36,9 @@
 #define GXCIPHER_H
 
 #include "GXBytebuffer.h"
+#include "GXPrivateKey.h"
+#include "GXPublicKey.h"
+#include "GXx509Certificate.h"
 
 class CGXCipher
 {
@@ -70,12 +73,9 @@ private:
 
     DLMS_SECURITY_SUITE m_SecuritySuite;
 
-
-    static int GetAuthenticatedData(
-        DLMS_SECURITY security,
-        CGXByteBuffer& authenticationKey,
-        CGXByteBuffer& plainText,
-        CGXByteBuffer& result);
+    std::pair<CGXPublicKey, CGXPrivateKey> m_KeyAgreementKeyPair;
+    std::pair<CGXPublicKey, CGXPrivateKey> m_SigningKeyPair;
+    std::vector<CGXx509Certificate> m_Certificates;
 
     void Init(
         unsigned char* systemTitle,
@@ -170,6 +170,10 @@ public:
     /**
       * Encrypt PDU.
       *
+      * suite
+      *            Security suite.
+      * security
+      *            Security.
       * tag
       *            Tag.
       * systemTitle
@@ -180,6 +184,7 @@ public:
       *            Encrypted data.
       */
     int Encrypt(
+        DLMS_SECURITY_SUITE suite,
         DLMS_SECURITY security,
         DLMS_COUNT_TYPE type,
         unsigned long frameCounter,
@@ -261,7 +266,7 @@ public:
     /**
     *  value: System title.
     */
-    void SetSystemTitle(CGXByteBuffer& value);
+    int SetSystemTitle(CGXByteBuffer& value);
 
     /**
      * Returns Block cipher key.
@@ -271,7 +276,7 @@ public:
     /**
     *  value: Block cipher key.
     */
-    void SetBlockCipherKey(CGXByteBuffer& value);
+    int SetBlockCipherKey(CGXByteBuffer& value);
 
     /**
      * Returns Authentication key.
@@ -282,7 +287,7 @@ public:
      * value
      *            Authentication key.
      */
-    void SetAuthenticationKey(CGXByteBuffer& value);
+    int SetAuthenticationKey(CGXByteBuffer& value);
 
     /**
      * Returns Frame counter. AKA. Invocation counter.
@@ -311,5 +316,19 @@ public:
      */
     void SetDedicatedKey(CGXByteBuffer& value);
 
+    /*Get key agreement key pair.*/
+    std::pair<CGXPublicKey, CGXPrivateKey>& GetKeyAgreementKeyPair();
+    /*Set key agreement key pair.*/
+    void SetKeyAgreementKeyPair(std::pair<CGXPublicKey, CGXPrivateKey>& value);
+
+    /*Get signing key pair.*/
+    std::pair<CGXPublicKey, CGXPrivateKey>& GetSigningKeyPair();
+    /*Set signing key pair.*/
+    void SetSigningKeyPair(std::pair<CGXPublicKey, CGXPrivateKey>& value);
+
+    /*Get available certificates.*/
+    std::vector<CGXx509Certificate>& GetCertificates();
+    /*Set available certificates.*/
+    void SetCertificates(std::vector<CGXx509Certificate>& value);
 };
 #endif //GXCIPHER_H

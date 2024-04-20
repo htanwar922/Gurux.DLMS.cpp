@@ -280,6 +280,11 @@ int CGXXmlWriter::WriteElementString(const char* name, int value)
     return 0;
 }
 
+int CGXXmlWriter::WriteElementString(const char* name, bool value)
+{
+    int tmp = value ? 1 : 0;
+    return CGXXmlWriter::WriteElementString(name, tmp);
+}
 
 int CGXXmlWriter::WriteElementString(const char* name, long value)
 {
@@ -1277,7 +1282,7 @@ int SaveProfileGeneric(CGXXmlWriter* writer, CGXDLMSProfileGeneric* obj)
     if ((ret = writer->WriteStartElement("Buffer")) == 0)
     {
         /*
-        GXDateTime lastdt = null;
+        GXDateTime lastdt = NULL;
         int add = CapturePeriod;
         //Some meters are returning 0 if capture period is one hour.
         if (add == 0)
@@ -1286,7 +1291,7 @@ int SaveProfileGeneric(CGXXmlWriter* writer, CGXDLMSProfileGeneric* obj)
         }
         //Get data types.
         List<DataType> list = new List<DataType>();
-        if (CaptureObjects != null && CaptureObjects.Count != 0)
+        if (CaptureObjects != NULL && CaptureObjects.Count != 0)
         {
             foreach(var it in CaptureObjects)
             {
@@ -1311,13 +1316,13 @@ int SaveProfileGeneric(CGXXmlWriter* writer, CGXDLMSProfileGeneric* obj)
                 {
                     GXKeyValuePair<GXDLMSObject, GXDLMSCaptureObject> c = CaptureObjects[pos];
                     ++pos;
-                    if (CaptureObjects != null && c.Key is GXDLMSClock && c.Value.AttributeIndex == 2)
+                    if (CaptureObjects != NULL && c.Key is GXDLMSClock && c.Value.AttributeIndex == 2)
                     {
-                        if (it != null)
+                        if (it != NULL)
                         {
                             lastdt = (c.Key as GXDLMSClock).Time;
                         }
-                        else if (lastdt != null)
+                        else if (lastdt != NULL)
                         {
                             lastdt = new GXDateTime(lastdt.Value.AddMinutes(add));
                             writer->WriteElementObject("Cell", lastdt);
@@ -2647,10 +2652,12 @@ int SaveSecuritySetup(CGXXmlWriter* writer, CGXDLMSSecuritySetup* obj)
     {
         for (std::vector<CGXDLMSCertificateInfo*>::iterator it = obj->GetCertificates().begin(); it != obj->GetCertificates().end(); ++it)
         {
+            CGXByteBuffer sn;
+            (*it)->GetSerialNumber().ToArray(sn);
             if ((ret = writer->WriteStartElement("Item")) != 0 ||
                 (ret = writer->WriteElementString("Entity", (*it)->GetEntity())) != 0 ||
                 (ret = writer->WriteElementString("Type", (*it)->GetType())) != 0 ||
-                (ret = writer->WriteElementString("SerialNumber", (*it)->GetSerialNumber())) != 0 ||
+                (ret = writer->WriteElementString("SerialNumber", sn.ToHexString(false))) != 0 ||
                 (ret = writer->WriteElementString("Issuer", (*it)->GetIssuer())) != 0 ||
                 (ret = writer->WriteElementString("Subject", (*it)->GetSubject())) != 0 ||
                 (ret = writer->WriteElementString("SubjectAltName", (*it)->GetSubjectAltName())) != 0 ||

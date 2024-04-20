@@ -39,6 +39,8 @@
 #ifndef DLMS_IGNORE_SECURITY_SETUP
 #include "GXDLMSObject.h"
 #include "GXDLMSCertificateInfo.h"
+#include "GXDLMSSecureClient.h"
+#include "GXx509Certificate.h"
 
 //Global key types.
 typedef enum
@@ -97,11 +99,11 @@ public:
     //Used security suite.
     void SetSecuritySuite(DLMS_SECURITY_SUITE value);
 
-    CGXByteBuffer GetClientSystemTitle();
+    CGXByteBuffer& GetClientSystemTitle();
 
     void SetClientSystemTitle(CGXByteBuffer& value);
 
-    CGXByteBuffer GetServerSystemTitle();
+    CGXByteBuffer& GetServerSystemTitle();
 
     void SetServerSystemTitle(CGXByteBuffer& value);
 
@@ -114,7 +116,7 @@ public:
     //Imports an X.509 v3 certificate of a public key.
     int ImportCertificate(
         CGXDLMSClient* client,
-        CGXByteBuffer& key,
+        CGXx509Certificate& certificate,
         std::vector<CGXByteBuffer>& reply);
 
     /////////////////////////////////////////////////////////////////////////
@@ -143,7 +145,7 @@ public:
     /////////////////////////////////////////////////////////////////////////
     int ExportCertificateBySerial(
         CGXDLMSClient* client,
-        CGXByteBuffer& serialNumber,
+        CGXBigInteger& serialNumber,
         CGXByteBuffer& issuer,
         std::vector<CGXByteBuffer>& reply);
 
@@ -226,6 +228,45 @@ public:
         CGXDLMSClient* client,
         CGXByteBuffer& kek,
         std::vector<std::pair<DLMS_GLOBAL_KEY_TYPE, CGXByteBuffer&> >& list,
+        std::vector<CGXByteBuffer>& reply);
+
+
+    /*
+    * Agree on one or more symmetric keys using the key agreement algorithm.
+    * client: DLMS client that is used to generate action.
+    * list: List of keys.
+    * reply: Generated action.
+    * Returns Error code.
+    */
+    int KeyAgreement(
+        CGXDLMSSecureClient* client,
+        std::vector<std::pair<DLMS_GLOBAL_KEY_TYPE, CGXByteBuffer>> list,
+        std::vector<CGXByteBuffer>& reply);
+   
+    /**
+    * Generates an asymmetric key pair as required by the security suite.
+    *
+    * client: DLMS client that is used to generate action.
+    * type: New certificate type.
+    * reply: Generated action.
+    * Returns Error code.
+    */
+    int GenerateKeyPair(
+        CGXDLMSSecureClient* client,
+        DLMS_CERTIFICATE_TYPE type,
+        std::vector<CGXByteBuffer>& reply);
+
+    /*
+    * Ask Server sends the Certificate Signing Request(CSR) data.
+    *
+    client: DLMS client that is used to generate action.</param>
+    type: identifies the key pair for which the certificate will be requested.</param>
+    * reply: Generated action.
+    * Returns Error code.
+    */
+    int GenerateCertificate(
+        CGXDLMSSecureClient* client,
+        DLMS_CERTIFICATE_TYPE type,
         std::vector<CGXByteBuffer>& reply);
 };
 #endif //DLMS_IGNORE_SECURITY_SETUP

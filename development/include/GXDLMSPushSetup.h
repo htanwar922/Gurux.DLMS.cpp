@@ -40,6 +40,27 @@
 #include "GXDLMSObject.h"
 #include "GXDLMSPushObject.h"
 #include "GXDLMSCaptureObject.h"
+#include "GXRepetitionDelay.h"
+#include "GXPushProtectionParameters.h"
+#include "GXPushConfirmationParameter.h"
+
+/**
+ * Push operation method defines what service class is used with push messages.
+ */
+typedef enum {
+    /**
+     * Unconfirmed, retry on supporting protocol layer failure.
+     */
+    DLMS_PUSH_OPERATION_METHOD_UNCONFIRMED_FAILURE,
+    /**
+     * Unconfirmed, retry on missing supporting protocol layer confirmation.
+     */
+    DLMS_PUSH_OPERATION_METHOD_UNCONFIRMED_MISSING,
+    /**
+     * Confirmed, retry on missing confirmation.
+     */
+    DLMS_PUSH_OPERATION_METHOD_CONFIRMED
+}DLMS_PUSH_OPERATION_METHOD;
 
 /**
 Online help:
@@ -53,7 +74,31 @@ private:
     DLMS_MESSAGE_TYPE m_Message;
     std::vector<std::pair<CGXDLMSObject*, CGXDLMSCaptureObject> > m_PushObjectList;
     std::vector<std::pair<CGXDateTime, CGXDateTime> > m_CommunicationWindow;
-    int m_RandomisationStartInterval, m_NumberOfRetries, m_RepetitionDelay;
+
+    int m_RandomisationStartInterval, m_NumberOfRetries;
+    /**Repetition delay for Version #0 and #1.*/
+    int m_RepetitionDelay;
+
+    /*Repetition delay for Version2.*/
+    CGXRepetitionDelay m_RepetitionDelay2;
+
+    /*The logical name of a communication port setup object.*/
+    CGXDLMSObject* m_PortReference;
+
+    /*Push client SAP.*/
+    signed char m_PushClientSAP;
+
+    /*Push protection parameters.*/
+    std::vector<CGXPushProtectionParameters> m_PushProtectionParameters;
+
+    /*Push operation method.*/
+    DLMS_PUSH_OPERATION_METHOD m_PushOperationMethod;
+
+    /*Push confirmation parameter.*/
+    CGXPushConfirmationParameter m_ConfirmationParameters;
+
+    /*Last confirmation date time.*/
+    CGXDateTime m_LastConfirmationDateTime;
 
 public:
     //Constructor.
@@ -165,6 +210,16 @@ public:
     int GetPushValues(CGXDLMSClient* client,
         std::vector<CGXDLMSVariant>& values,
         std::vector<std::pair<CGXDLMSObject*, CGXDLMSCaptureObject> >& results);
+
+    /*Activates the push process.*/
+    int Activate(
+        CGXDLMSClient* client,
+        std::vector<CGXByteBuffer>& reply);
+
+    /*Reset the push process.*/
+    int Reset(
+        CGXDLMSClient* client,
+        std::vector<CGXByteBuffer>& reply);
 };
 #endif //DLMS_IGNORE_PUSH_SETUP
 #endif //GXDLMSPUSHSETUP_H

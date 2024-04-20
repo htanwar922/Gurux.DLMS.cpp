@@ -875,7 +875,23 @@ int CGXDLMSProfileGeneric::SetValue(CGXDLMSSettings& settings, CGXDLMSValueEvent
                 for (unsigned int pos = 0; pos < (*row).Arr.size(); ++pos)
                 {
                     std::pair<CGXDLMSObject*, CGXDLMSCaptureObject*> item = m_CaptureObjects[pos];
-                    if (row->Arr[pos].vt == DLMS_DATA_TYPE_NONE || row->Arr[pos].vt == DLMS_DATA_TYPE_OCTET_STRING || row->Arr[pos].vt == DLMS_DATA_TYPE_UINT32)
+                    if (row->Arr[pos].vt == DLMS_DATA_TYPE_OCTET_STRING)
+                    {
+                        DLMS_DATA_TYPE type = types.at(pos);
+                        if (type != DLMS_DATA_TYPE_NONE)
+                        {
+                            if ((ret = CGXDLMSClient::ChangeType(row->Arr[pos], type, data)) != 0)
+                            {
+                                return ret;
+                            }
+                            row->Arr[pos] = data;
+                            if (type == DLMS_DATA_TYPE_DATETIME)
+                            {
+                                lastDate = data.dateTime;
+                            }
+                        }
+                    }
+                    else if (row->Arr[pos].vt == DLMS_DATA_TYPE_NONE || row->Arr[pos].vt == DLMS_DATA_TYPE_OCTET_STRING || row->Arr[pos].vt == DLMS_DATA_TYPE_UINT32)
                     {
                         if (item.first->GetObjectType() == DLMS_OBJECT_TYPE_CLOCK && item.second->GetAttributeIndex() == 2)
                         {

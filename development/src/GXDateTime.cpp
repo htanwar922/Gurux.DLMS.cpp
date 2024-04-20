@@ -457,7 +457,7 @@ void Replace(std::string& value, const char* tag, const char* v)
     {
         value.replace(pos, strlen(tag), v);
         // Trim spaces.
-        value = GXHelpers::trim(value);
+        value = GXHelpers::Trim(value);
     }
 }
 
@@ -481,7 +481,7 @@ int Remove(CGXDateTime* value, std::string& format, char dateSeparator, char tim
         value->SetSkip((DATETIME_SKIPS)(value->GetSkip() | DATETIME_SKIPS_YEAR | DATETIME_SKIPS_MONTH | DATETIME_SKIPS_DAY | DATETIME_SKIPS_DAYOFWEEK));
     }
     // Trim spaces.
-    format = GXHelpers::trim(format);
+    format = GXHelpers::Trim(format);
     return 0;
 }
 
@@ -554,7 +554,7 @@ int CGXDateTime::FromString(const char* datetime)
                         v = v.substr(0, pos + offset) + val + value.substr(pos + 1);
                         offset += cnt - 1;
                         std::string tmp = format.substr(lastFormatIndex + 1, cnt);
-                        tmp = GXHelpers::trim(tmp);
+                        tmp = GXHelpers::Trim(tmp);
                         if (tmp == "Y")
                         {
                             skip |= DATETIME_SKIPS_YEAR;
@@ -774,7 +774,7 @@ int CGXDateTime::ToFormatString(const char* pattern, std::string& value)
             {
                 Replace(format, "%M", "*");
             }
-            ret = (int)strftime(buff, sizeof(buff), GXHelpers::trim(format).c_str(), &m_Value);
+            ret = (int)strftime(buff, sizeof(buff), GXHelpers::Trim(format).c_str(), &m_Value);
             if (ret != 0)
             {
                 ret = 0;

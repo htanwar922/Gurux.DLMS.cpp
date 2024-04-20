@@ -48,8 +48,8 @@ CGXByteBuffer::CGXByteBuffer(int capacity)
     Capacity(capacity);
 }
 
-//Copy constructor.
-CGXByteBuffer::CGXByteBuffer(const CGXByteBuffer& value)
+CGXByteBuffer::CGXByteBuffer(
+    const CGXByteBuffer& value)
 {
     m_Capacity = 0;
     m_Data = NULL;
@@ -57,7 +57,8 @@ CGXByteBuffer::CGXByteBuffer(const CGXByteBuffer& value)
     m_Size = 0;
     if (value.m_Size - value.m_Position != 0)
     {
-        Set(value.m_Data + value.m_Position, value.m_Size - value.m_Position);
+        Set(value.m_Data + value.m_Position, 
+            value.m_Size - value.m_Position);
     }
 }
 
@@ -423,6 +424,11 @@ int CGXByteBuffer::AddString(const std::string& value)
     return CGXByteBuffer::Set(value.c_str(), (unsigned long)value.length());
 }
 
+int CGXByteBuffer::AddString(const std::wstring& value)
+{
+    return CGXByteBuffer::Set(value.c_str(), (unsigned long)value.length());
+}
+
 int CGXByteBuffer::AttachString(char* value)
 {
     unsigned long len = (unsigned long)strlen(value);
@@ -505,6 +511,17 @@ int CGXByteBuffer::GetUInt32(unsigned long* value)
         m_Data[m_Position + 2] << 8 |
         m_Data[m_Position + 3];
     m_Position += 4;
+    return 0;
+}
+
+int CGXByteBuffer::GetInt8(char* value)
+{
+    if (m_Position >= m_Size)
+    {
+        return DLMS_ERROR_CODE_OUTOFMEMORY;
+    }
+    *value = m_Data[m_Position];
+    ++m_Position;
     return 0;
 }
 
@@ -722,12 +739,10 @@ void CGXByteBuffer::AddDoubleAsString(double value)
     }
 }
 
-/**
-    * Returns data as byte array.
-    *
-    * @return Byte buffer as a byte array.
-    */
-int CGXByteBuffer::SubArray(unsigned long index, int count, CGXByteBuffer& bb)
+int CGXByteBuffer::SubArray(
+    unsigned long index, 
+    int count, 
+    CGXByteBuffer& bb)
 {
     bb.Clear();
     bb.Set(this, index, count);
@@ -817,7 +832,7 @@ void CGXByteBuffer::SetHexString(std::string& value)
     Set(&tmp);
 }
 
-void CGXByteBuffer::SetHexString(std::string value)
+void CGXByteBuffer::SetHexString2(std::string value)
 {
     CGXByteBuffer tmp;
     GXHelpers::HexToBytes(value, tmp);
@@ -851,4 +866,219 @@ bool CGXByteBuffer::IsAsciiString(unsigned char* value, unsigned long length)
 bool CGXByteBuffer::IsAsciiString()
 {
     return IsAsciiString(m_Data, m_Size);
+}
+
+int CGXByteBuffer::GetString(int count,
+    std::string& value)
+{
+    if (count < 0 ||
+        m_Position + count > m_Size)
+    {
+        return DLMS_ERROR_CODE_INVALID_PARAMETER;
+    }
+    if (count != 0)
+    {
+        value.append(reinterpret_cast<char const*>(m_Data + m_Position), count);
+        m_Position += count;
+    }
+    return 0;
+}
+
+int CGXByteBuffer::GetString(unsigned long index,
+    unsigned long count,
+    std::string& value)
+{
+    if (index + count > m_Size)
+    {
+        return DLMS_ERROR_CODE_INVALID_PARAMETER;
+    }
+    if (count != 0)
+    {
+        value.append(reinterpret_cast<char const*>(m_Data + index), count);
+    }
+    return 0;
+}
+
+int CGXByteBuffer::GetStringUnicode(unsigned long index,
+    unsigned long count,
+    std::string& value)
+{
+    if (index + count > m_Size)
+    {
+        return DLMS_ERROR_CODE_INVALID_PARAMETER;
+    }
+    if (m_Size != 0)
+    {
+        value.append(reinterpret_cast<char const*>(m_Data + index), m_Size);
+    }
+    return 0;
+}
+
+int CGXByteBuffer::GetStringUnicode(unsigned long index,
+    unsigned long count,
+    std::wstring& value)
+{
+    if (index + count > m_Size)
+    {
+        return DLMS_ERROR_CODE_INVALID_PARAMETER;
+    }
+    if (m_Size != 0)
+    {
+        value.append(reinterpret_cast<wchar_t const*>(m_Data + index), m_Size);
+    }
+    return 0;
+}
+/**
+* Get index of given char.
+*
+* @param ch
+* @return
+*/
+static int GetIndex(char ch)
+{
+    if (ch == '+')
+    {
+        return 62;
+    }
+    if (ch == '/')
+    {
+        return 63;
+    }
+    if (ch == '=')
+    {
+        return 64;
+    }
+    if (ch < ':')
+    {
+        return (52 + (ch - '0'));
+    }
+    if (ch < '[')
+    {
+        return (ch - 'A');
+    }
+    if (ch < '{')
+    {
+        return (26 + (ch - 'a'));
+    }
+    return -1;
+}
+
+/**
+   * Convert Base64 string to byte array.
+   *
+   * @param input
+   *            Base64 string.
+   * @return Converted byte array.
+   */
+int CGXByteBuffer::FromBase64(std::string input)
+{
+    GXHelpers::Replace(input, "\r\n", "");
+    GXHelpers::Replace(input, "\n", "");
+    if (input.length() % 4 != 0)
+    {
+        return DLMS_ERROR_CODE_INVALID_PARAMETER;
+    }
+    size_t len = (input.length() * 3) / 4;
+    size_t pos = input.find('=', 0);
+    if (pos > 0)
+    {
+        len -= input.length() - pos;
+    }
+    std::string inChars;
+    int b[4];
+    for (pos = 0; pos != input.length(); pos += 4)
+    {
+        inChars = input.substr(pos, pos + 4);
+        b[0] = GetIndex(inChars[0]);
+        b[1] = GetIndex(inChars[1]);
+        b[2] = GetIndex(inChars[2]);
+        b[3] = GetIndex(inChars[3]);
+        SetUInt8((b[0] << 2) | (b[1] >> 4));
+        if (b[2] < 64)
+        {
+            SetUInt8((b[1] << 4) | (b[2] >> 2));
+            if (b[3] < 64)
+            {
+                SetUInt8((b[2] << 6) | b[3]);
+            }
+        }
+    }
+    return 0;
+}
+
+const char BASE_64_ARRAY[] = { 'A', 'B', 'C', 'D', 'E', 'F',
+    'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+    'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+    'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's',
+    't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5',
+    '6', '7', '8', '9', '+', '/', '=' };
+
+int CGXByteBuffer::ToBase64(std::string& value)
+{
+    unsigned long b, pos;
+    for (pos = 0; pos < m_Size; pos += 3)
+    {
+        b = (m_Data[pos] & 0xFC) >> 2;
+        value += BASE_64_ARRAY[b];
+        b = (m_Data[pos] & 0x03) << 4;
+        if (pos + 1 < m_Size)
+        {
+            b |= (m_Data[pos + 1] & 0xF0) >> 4;
+            value += BASE_64_ARRAY[b];
+            b = (m_Data[pos + 1] & 0x0F) << 2;
+            if (pos + 2 < m_Size)
+            {
+                b |= (m_Data[pos + 2] & 0xC0) >> 6;
+                value += BASE_64_ARRAY[b];
+                b = m_Data[pos + 2] & 0x3F;
+                value += BASE_64_ARRAY[b];
+            }
+            else {
+                value += BASE_64_ARRAY[b];
+                value += '=';
+            }
+        }
+        else {
+            value += BASE_64_ARRAY[b];
+            value += "==";
+        }
+    }
+    return 0;
+}
+
+CGXByteBuffer& CGXByteBuffer::operator=(const CGXByteBuffer& value)
+{
+    Clear();
+    Capacity(value.m_Capacity);
+    if (value.m_Size != 0)
+    {
+        memcpy(m_Data, value.m_Data, value.m_Size);
+        m_Size = value.m_Size;
+        m_Position = value.m_Position;
+    }
+    return *this;
+}
+
+void CGXByteBuffer::Reverse(unsigned long index,
+    unsigned long count)
+{
+    unsigned long pos;
+    unsigned long endPos;
+    if (index == 0)
+    {
+        endPos = m_Size - 1;
+    }
+    else
+    {
+        endPos = index + count - 1;
+    }
+    unsigned char tmp;
+    count /= 2;
+    for (pos = 0; pos != count; ++pos)
+    {
+        tmp = m_Data[index + pos];
+        m_Data[index + pos] = m_Data[endPos];
+        m_Data[endPos] = tmp;
+        --endPos;
+    }
 }

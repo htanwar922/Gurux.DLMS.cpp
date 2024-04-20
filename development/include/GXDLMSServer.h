@@ -293,8 +293,6 @@ protected:
     * @param arg
     *            Value event argument.
     * @return Access mode.
-    * @throws Exception
-    *             Server handler occurred exceptions.
     */
     virtual DLMS_ACCESS_MODE GetAttributeAccess(CGXDLMSValueEventArg* arg) = 0;
 
@@ -304,8 +302,6 @@ protected:
     * @param arg
     *            Value event argument.
     * @return Method access mode.
-    * @throws Exception
-    *             Server handler occurred exceptions.
     */
     virtual DLMS_METHOD_ACCESS_MODE GetMethodAccess(CGXDLMSValueEventArg* arg) = 0;
 

@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/build/GuruxDLMSServerExample/src/GuruxDLMSServer",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -24,13 +24,36 @@
             ]
         },
 		{
-            "name": "(gdb) Launch Client",
+            "name": "(gdb) Launch Client (Plain)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/GuruxDLMSClientExample/src/GuruxDLMSClient",
-            "args": ["-h", "localhost", "-p", "4063"],
+            "args": ["-h", "localhost", "-p", "4063", "-i", "WRAPPER"],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+		{
+            "name": "(gdb) Launch Client (Ciphered)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/GuruxDLMSClientExample/src/GuruxDLMSClient",
+            "args": [
+                "-h", "localhost", "-p", "4064", "-i", "WRAPPER",
+                "-a", "Low", "-P", "Gurux",
+                "-T", "4D4D4D0000BC614E", "-C", "AuthenticationEncryption",    
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",

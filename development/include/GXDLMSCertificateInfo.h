@@ -37,10 +37,12 @@
 
 #include <string>
 #include "enums.h"
+#include "GXBigInteger.h"
 
 class CGXDLMSCertificateInfo
 {
 private:
+    friend class CGXDLMSSecuritySetup;
     /**
  * Used certificate entity.
  */
@@ -54,12 +56,18 @@ private:
     /**
      * Certificate serial number.
      */
-    std::string m_SerialNumber;
+    CGXBigInteger m_SerialNumber;
 
     /**
      * Certificate issuer.
      */
     std::string m_Issuer;
+
+    /**
+    * Certificate issuer in ASN1 format.
+    */
+    CGXByteBuffer m_IssuerRaw;
+
     /**
      * Certificate subject.
      */
@@ -96,17 +104,17 @@ public:
     /**
      * @return Certificate serial number.
      */
-    std::string GetSerialNumber();
+    CGXBigInteger& GetSerialNumber();
 
     /**
      *  Certificate serial number.
      */
-    void SetSerialNumber(std::string& value);
+    void SetSerialNumber(CGXBigInteger& value);
 
     /**
      * Certificate issuer.
      */
-    std::string GetIssuer();
+    std::string& GetIssuer();
 
     /**
      * Certificate issuer.
@@ -114,9 +122,14 @@ public:
     void SetIssuer(std::string& value);
 
     /**
+    * Certificate issuer in ASN1 format.
+    */
+    CGXByteBuffer& GetIssuerRaw();
+
+    /**
      * Certificate subject.
      */
-    std::string GetSubject();
+    std::string& GetSubject();
 
     /**
      * Certificate subject.
@@ -126,7 +139,7 @@ public:
     /**
      * Certificate subject alt name.
      */
-    std::string GetSubjectAltName();
+    std::string& GetSubjectAltName();
 
     /**
      * Certificate subject alt name.
