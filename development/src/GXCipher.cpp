@@ -758,6 +758,8 @@ int CGXCipher::Decrypt(
     case DLMS_COMMAND_DED_METHOD_RESPONSE:
     case DLMS_COMMAND_DED_EVENT_NOTIFICATION:
         break;
+    case DLMS_COMMAND_NONE:         // Himanshu - added this case for Glo-ACCESS Service
+        break;
     default:
         return DLMS_ERROR_CODE_INVALID_PARAMETER;
     }

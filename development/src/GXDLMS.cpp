@@ -3173,7 +3173,7 @@ int CGXDLMS::GetPdu(
         case DLMS_COMMAND_GENERAL_CIPHERING:
             ret = HandleGeneralCiphering(settings, data);
             break;
-        case DLMS_COMMAND_NONE:     // Himanshu - added this case.
+        case DLMS_COMMAND_NONE:     // Himanshu - added this case for Glo-ACCESS Service
             if (settings.IsServer())
             {
                 ret = HandleGloDedRequest(settings, data);
@@ -3182,7 +3182,7 @@ int CGXDLMS::GetPdu(
             {
                 ret = HandleGloDedResponse(settings, data, index);
             }
-
+            break;
         default:
             // Invalid DLMS command.
             data.SetCommand(DLMS_COMMAND_NONE);
