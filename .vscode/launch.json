@@ -50,7 +50,7 @@
             "args": [
                 "-h", "localhost", "-p", "4063", "-i", "WRAPPER",
                 "-a", "Low", "-P", "Gurux",
-                "-T", "4D4D4D0000BC614E", "-C", "AuthenticationEncryption",    
+                "-T", "4D4D4D0000BC614E", "-C", "AuthenticationEncryption",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",

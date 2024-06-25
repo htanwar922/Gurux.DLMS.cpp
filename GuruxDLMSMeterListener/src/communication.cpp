@@ -1053,7 +1053,7 @@ int CGXCommunication::GetReadOut()
             }
             else
             {
-                WriteValue(GX_TRACE_LEVEL_INFO, "Attribute" + GXHelpers::IntToString(*pos) + " is not readable.");
+                WriteValue(GX_TRACE_LEVEL_INFO, "Attribute" + GXHelpers::IntToString(*pos) + " is not readable.\r\n");
             }
         }
     }

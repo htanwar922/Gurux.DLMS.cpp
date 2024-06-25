@@ -96,7 +96,7 @@ public:
     /**
     PPP authentication procedure user name.
     */
-    CGXByteBuffer& GetUserName();
+    CGXByteBuffer& GetUserNameA();
     void SetUserName(CGXByteBuffer& value);
 
     /**

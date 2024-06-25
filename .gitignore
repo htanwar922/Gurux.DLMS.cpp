@@ -231,3 +231,10 @@ GuruxDLMSClientExample/VS/DvlErrLog.txt
 *.exe
 development/VS/.vs/
 GuruxDLMSClientExample/VS/.vs/
+
+!.vs/
+.vs/*
+!.vs/ProjectSettings.json
+!.vs/VSWorkspaceState.json
+
+vcpkg_installed/

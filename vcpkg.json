@@ -1,0 +1,6 @@
+{
+	"name": "gurux-dlms-cpp",
+	"dependencies": [
+		"pthread"
+	]
+}
