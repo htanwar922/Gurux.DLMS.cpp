@@ -43,13 +43,36 @@
             ]
         },
 		{
-            "name": "(gdb) Launch Client (Ciphered)",
+            "name": "(gdb) Launch Client (Ciphered LLS)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/GuruxDLMSClient",
             "args": [
                 "-h", "localhost", "-p", "4063", "-i", "WRAPPER",
                 "-a", "Low", "-P", "Gurux",
+                "-T", "4D4D4D0000BC614E", "-C", "AuthenticationEncryption",
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "(gdb) Launch Client (Ciphered HLS)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/GuruxDLMSClient",
+            "args": [
+                "-h", "localhost", "-p", "4063", "-i", "WRAPPER",
+                "-a", "High", "-P", "Gurux",
                 "-T", "4D4D4D0000BC614E", "-C", "AuthenticationEncryption",
             ],
             "stopAtEntry": false,
